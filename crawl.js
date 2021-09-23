@@ -93,7 +93,7 @@ const getBatchReady = async (index) => {
     //TODO: re-run 3 times when fail occur
     for(let i = 0; i < 3; i += 1) {
         try {
-            let filter = index ? { state: 'READY', index: {$gt: index} } : { state: 'READY' };
+            let filter = index !== null ? { state: 'READY', index: {$gt: index} } : { state: 'READY' };
             let projection = ['_id', 'videoIds', 'state', 'index'];
             let option = { sort: {index: 1}};
 
@@ -180,7 +180,7 @@ const handleNewCrawl = async () => {
                     let isError = false;
     
                     for(item of resultList) {
-                        console.log("===>>>>>>>>START CRAWL NEW IN: ", item.videoId);
+                        console.log("===>>>START CRAWL NEW IN: ", item.videoId);
                         let responeNewCrawl = await handleCrawlCommentById(item.videoId, item.nextPage);
                         console.log("===>>>>>>>>END CRAWL NEW WITH: ", responeNewCrawl);
                         if(responeNewCrawl === "FAILED CRAWL") {

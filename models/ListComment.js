@@ -6,6 +6,6 @@ const listCommentSchema = new mongoose.Schema({
     comments: { type: Array, default: [] },
     amountFetched: {type: Number, default: 0},
     nextPage: String,
-});
+}, { timestamps: { createdAt: 'created_at', updatedAt: 'updated_at' }});
 
 module.exports = mongoose.model('listComments', listCommentSchema);

@@ -7,6 +7,6 @@ const listId = new mongoose.Schema({
     nextPage: String,
     state: { type: String, default: 'READY' },
     index: Number,
-});
+}, { timestamps: { createdAt: 'created_at', updatedAt: 'updated_at' } });
 
 module.exports = mongoose.model('listIds', listId);;

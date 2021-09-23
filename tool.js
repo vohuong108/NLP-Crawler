@@ -1,5 +1,6 @@
 const retryCrawl = require("./retry");
 const { handleNewCrawl, handleCrawlVideoID, initializeCommentList } = require("./crawl");
+const { handleCrawlVideoDetail } = require("./crawlDetailVideo");
 const connectDB = require("./db");
 const ListId = require("./models/ListId");
 const { default: axios } = require("axios");
@@ -11,17 +12,20 @@ const tool = async () => {
     let isConnected = await connectDB();
 
     if(isConnected === "CONNECTED TO DATABASE") {
-        console.log("=====>>>>RUN RETRY CRARWL");
-        let res1 = await retryCrawl();
-        console.log("=====>>>>RES RETRY CRARWL: ", res1);
+        // console.log("=====>>>>RUN RETRY CRARWL");
+        // let res1 = await retryCrawl();
+        // console.log("=====>>>>RES RETRY CRARWL: ", res1);
 
-        console.log("=====>>>>RUN READY CRARWL");
-        let res2 = await handleNewCrawl();
-        console.log("=====>>>>RES READY CRARWL: ", res2);
+        // console.log("=====>>>>RUN READY CRARWL");
+        // let res2 = await handleNewCrawl();
+        // console.log("=====>>>>RES READY CRARWL: ", res2);
 
         // console.log("=====>>>>RUN CRARWL ID");
         // let res3 = await handleCrawlVideoID();
         // console.log("=====>>>>RES CRARWL ID: ", res3);
+        console.log("=====>>>>RUN CRAWL VIDEO DETAILS");
+        let res4 = await handleCrawlVideoDetail();
+        console.log("=====>>>>RUN CRAWL VIDEO DETAILS: ", res4);
         
     }
 

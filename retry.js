@@ -5,7 +5,7 @@ const { handleUpdateBatchState, handleCrawlCommentById } = require("./crawl");
 const getBatchRetry = async (index) => {
     for(let i = 0; i < 3; i += 1) {
         try {
-            let filter = index ? { state: 'RETRY', index: {$gt: index} } : { state: 'RETRY' };
+            let filter = index !== null ? { state: 'RETRY', index: {$gt: index} } : { state: 'RETRY' };
             let projection = ['_id', 'videoIds', 'state', 'index'];
             let option = { sort: {index: 1}};
 
