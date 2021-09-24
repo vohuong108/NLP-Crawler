@@ -54,11 +54,13 @@ const queryComment = async (base_url, part, maxResults, order, textFormat, video
             return res?.data;
     
         } catch (err) {
-            console.error("!!!!!!!!!ERROR IN SENT QUERY: ", err.message);
-            console.log("!!!!!!!!!ERROR CODE: ", err.response.status, " ERROR STATUS: ", err.response.statusText);
+            console.error("################################ERROR IN SENT QUERY: ", err?.message);
+            console.log("ERROR CODE: ", err?.response?.status, " ERROR STATUS: ", err?.response?.statusText);
 
-            if(err.response.status === 403 && err.response.statusText === "quotaExceeded") return "FAILED QUERY";
-            else if(err.response.status === 403 && err.response.statusText === "Forbidden") return "QUERY 403";
+            if(err?.response?.status === 403 && err?.response?.statusText === "quotaExceeded") return "QUERY QUOTA EXCEED";
+            else if(err?.response?.status === 403 && err?.response?.statusText === "Forbidden") return "QUERY 403";
+            else if(err?.response?.status === 404 && err?.response?.statusText === "Not Found") return "QUERY 404";
+            
             console.log("=>>>>> Replay ", i, "times");
             if(i === 2) return "FAILED QUERY";
         }

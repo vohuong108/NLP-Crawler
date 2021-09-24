@@ -21,7 +21,9 @@ const handleCrawlCommentById = async (videoId, nextPage) => {
       
         let responeQuery = await queryComment(base_cmt_url, part, maxResults, order, textFormat, videoId, API_KEY, nextPageToken);
         
-        if(responeQuery !== 'FAILED QUERY') {
+        if(responeQuery === "QUERY QUOTA EXCEED") return "CRAWL QUOTA EXCEED";
+        else if(responeQuery === "QUERY 403" || responeQuery === "QUERY 404") return "FULLED CRAWL";
+        else if(responeQuery !== 'FAILED QUERY') {
             
             if(responeQuery?.items?.length > 0) {
                 nextPageToken = responeQuery.nextPageToken;
@@ -51,7 +53,7 @@ const handleCrawlCommentById = async (videoId, nextPage) => {
                 else return "FAILED CRAWL";
 
                 if (!nextPageToken) { return "FULLED CRAWL" }
-                await new Promise((resolve, _) => setTimeout(resolve, 400));
+                await new Promise((resolve, _) => setTimeout(resolve, 1500));
             }
             else return "FULLED CRAWL";
 
@@ -98,11 +100,13 @@ const getBatchReady = async (index) => {
             let option = { sort: {index: 1}};
 
             let result = await ListId.findOne(filter, projection, option);
-            console.log("GET BATCH READY SUCCESSFUL: ", result?._id);
-            return result;
+            console.log("===>GET BATCH READY SUCCESSFUL: ", result?._id);
+            
+            if(result?._id) return { ...result,_id: result?._id?.toString() }
+            else return result;
         } catch (err) {
-            console.error("ERROR IN GET READY: ", err);
-            console.log("=>>>>> Replay ", i, "times");
+            console.error("################################ERROR IN GET READY: ", err);
+            console.log("===>> Replay ", i, "times");
             
             if(i === 2) return "FAILED GET BATCH READY";
         }
@@ -112,18 +116,19 @@ const getBatchReady = async (index) => {
 
 //FIND list videoId in ListComment model that don't have {nextPage: null, amountFetched > 0}
 const getListVideoNewCrawl = async (batchId) => {
+    console.log("GET LIST READY BY BATCH ID: ", batchId);
     for (let i = 0; i < 3; i +=1 ) {
         try {
             let filter = { parentId: batchId, $nor: [{nextPage: null}, {amountFetched: {$gt: 0}}] }
             let projection = ['videoId', 'nextPage'];
             let items = await ListComment.find(filter, projection);
             
-            console.log("GET LIST NEW CRAWL SUCCESS: ", items?.length);
+            console.log("===>>GET LIST NEW CRAWL SUCCESS: ", items?.length);
             console.log("LIST NEW CRAWL: ", items?.map(i => i.videoId));
             return items;
         } catch (err) {
-            console.error("ERROR IN GET LIST VIDEO READY BY BATCH ID", err); 
-            console.log("=>>>>> Replay ", i, "times");
+            console.error("################################ERROR IN GET LIST VIDEO READY BY BATCH ID", err); 
+            console.log("===>>> Replay ", i, "times");
             if(i === 2) return {state: "ERROR GET BY BATCH ID" };
             
         }
@@ -147,7 +152,7 @@ const handleUpdateBatchState = async (batchId, newState) => {
             console.log("UPDATED BATCH STATE SUCCESSFUL: ", batchId);
             return "UPDATED BATCH STATE";
         } catch (err) {
-            console.error("ERROR IN UPDATE BATCH STATE: ", err);
+            console.error("################################ERROR IN UPDATE BATCH STATE: ", err);
             console.log("=>>>>> Replay ", i, "times");
             
             if(i === 2) return "FAILED UPDATE BATCH STATE";
@@ -180,12 +185,18 @@ const handleNewCrawl = async () => {
                     let isError = false;
     
                     for(item of resultList) {
-                        console.log("===>>>START CRAWL NEW IN: ", item.videoId);
+                        console.log("===>>>>>>START CRAWL NEW IN: ", item.videoId);
                         let responeNewCrawl = await handleCrawlCommentById(item.videoId, item.nextPage);
-                        console.log("===>>>>>>>>END CRAWL NEW WITH: ", responeNewCrawl);
-                        if(responeNewCrawl === "FAILED CRAWL") {
+                        console.log("===>>>>>>>>END CRAWL NEW WITH: ", responeNewCrawl, "\n");
+
+                        if(responeNewCrawl === "CRAWL QUOTA EXCEED") {
+                            await handleUpdateBatchState(batchId, "RETRY");
+                            return responeNewCrawl;
+                        }
+                        else if(responeNewCrawl !== "FULLED CRAWL") {
                             isError = true;
                         }
+                        await new Promise((resolve, _) => setTimeout(resolve, 1000));
                     }
     
                     if(!isError) {

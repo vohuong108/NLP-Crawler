@@ -10,10 +10,12 @@ const getBatchRetry = async (index) => {
             let option = { sort: {index: 1}};
 
             let result = await ListId.findOne(filter, projection, option);
-            console.log("GET BATCH RETRY SUCCESSFUL", result?._id);
-            return result;
+            console.log("===>GET BATCH RETRY SUCCESSFUL", result?._id);
+
+            if(result?._id) return { ...result,_id: result?._id?.toString() }
+            else return result;
         } catch (err) {
-            console.error("ERROR IN GET RETRY: ", err);
+            console.error("################################ERROR IN GET RETRY: ", err);
             console.log("=>>>>> Replay ", i, "times");
             
             if(i === 2) return "FAILED GET BATCH RETRY";
@@ -23,17 +25,18 @@ const getBatchRetry = async (index) => {
 }
 
 const getListVideoRetry = async (batchId) => {
+    
     for (let i = 0; i < 3; i += 1) {
         try {
             let filter = { parentId: batchId, $nor: [{nextPage: null}, {amountFetched: {$gt: 0}}] }
             let projection = ['videoId', 'nextPage'];
             let items = await ListComment.find(filter, projection);
     
-            console.log("GET LIST RETRY SUCCESSFUL", items?.length);
+            console.log("===>>>GET LIST RETRY SUCCESSFUL", items?.length);
             console.log("LIST RETRY: ", items?.map(i => i.videoId));
             return items;
         } catch (err) {
-            console.error("ERROR IN GET LIST VIDEO RETRY BY BATCH ID", err); 
+            console.error("################################ERROR IN GET LIST VIDEO RETRY BY BATCH ID", err); 
             console.log("=>>>>> Replay ", i, "times");
 
             if(i === 2) return "ERROR GET BY BATCH ID";  
@@ -47,7 +50,7 @@ const retryCrawl = async () => {
 
     while (true) {
         let retry = await getBatchRetry(indexBatch);
-
+        console.log("BATCH: ", retry);
         if(!retry) { return "FULLED BATCH"; }
         else if (retry !== "FAILED GET BATCH RETRY") {
             indexBatch = retry.index;
@@ -65,13 +68,19 @@ const retryCrawl = async () => {
                     let isError = false;
     
                     for(item of listVideoRetry) {
-                        console.log("===>>>>>>>>START RETRY IN: ", item.videoId);
+                        console.log("===>>>>>>START RETRY IN: ", item.videoId);
                         let response = await handleCrawlCommentById(item.videoId, item.nextPage);
-                        console.log("===>>>>>>>>END RETRY WITH: ", response);
-                        if(response !== "FULLED CRAWL") {
-                            //TODO: handle retry crawl failed -> set isError to true
+                        console.log("===>>>>>>>>END RETRY WITH: ", response, "\n");
+
+                        if(response === "CRAWL QUOTA EXCEED") {
+                            await handleUpdateBatchState(batchId, "RETRY");
+                            return response;
+                        }
+                        else if(response !== "FULLED CRAWL") {
                             isError = true;
                         }
+                        await new Promise((resolve, _) => setTimeout(resolve, 1000));
+
                     }
     
                     if(!isError) {
