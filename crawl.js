@@ -10,6 +10,7 @@ const base_cmt_url = "https://youtube.googleapis.com/youtube/v3/commentThreads";
 const API_KEY = "AIzaSyBEoXFRdY-pNXuhCwf-83KRH4RO8depHLU";
 
 const handleCrawlCommentById = async (videoId, nextPage, amount) => {
+    console.log("AMOUNT: ", amount)
     let part = ['snippet', 'replies'];
     let maxResults = 100;
     let order = 'time';
@@ -120,7 +121,7 @@ const getListVideoNewCrawl = async (batchId) => {
     for (let i = 0; i < 3; i +=1 ) {
         try {
             let filter = { parentId: batchId, $nor: [{nextPage: null}, {amountFetched: {$gt: 0}}] }
-            let projection = ['videoId', 'nextPage'];
+            let projection = ['videoId', 'nextPage', 'amountFetched'];
             let items = await ListComment.find(filter, projection);
             
             console.log("===>>GET LIST NEW CRAWL SUCCESS: ", items?.length);

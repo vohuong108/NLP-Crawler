@@ -29,7 +29,7 @@ const getListVideoRetry = async (batchId) => {
     for (let i = 0; i < 3; i += 1) {
         try {
             let filter = { parentId: batchId, $nor: [{nextPage: null}, {amountFetched: {$gt: 0}}] }
-            let projection = ['videoId', 'nextPage'];
+            let projection = ['videoId', 'nextPage', 'amountFetched'];
             let items = await ListComment.find(filter, projection);
     
             console.log("===>>>GET LIST RETRY SUCCESSFUL", items?.length);

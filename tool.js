@@ -18,9 +18,9 @@ const tool = async () => {
         let res1 = await retryCrawl();
         console.log("=====>>>>RES RETRY CRARWL: ", res1);
 
-        // console.log("=====>>>>RUN READY CRARWL");
-        // let res2 = await handleNewCrawl();
-        // console.log("=====>>>>RES READY CRARWL: ", res2);
+        console.log("=====>>>>RUN READY CRARWL");
+        let res2 = await handleNewCrawl();
+        console.log("=====>>>>RES READY CRARWL: ", res2);
 
         // console.log("=====>>>>RUN CRARWL ID");
         // let res3 = await handleCrawlVideoID();
