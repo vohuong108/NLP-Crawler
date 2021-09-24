@@ -9,12 +9,12 @@ const base_cmt_url = "https://youtube.googleapis.com/youtube/v3/commentThreads";
 // const API_KEY = "AIzaSyCM2zo3xCPcW23oQAPBPkUe08WzuKFhhzs";
 const API_KEY = "AIzaSyBEoXFRdY-pNXuhCwf-83KRH4RO8depHLU";
 
-const handleCrawlCommentById = async (videoId, nextPage) => {
+const handleCrawlCommentById = async (videoId, nextPage, amount) => {
     let part = ['snippet', 'replies'];
     let maxResults = 100;
     let order = 'time';
     let textFormat = 'plainText';
-    let amountFetched = 0;
+    let amountFetched = amount;
     let nextPageToken = nextPage;
 
     while(true) {
@@ -101,7 +101,7 @@ const getBatchReady = async (index) => {
 
             let result = await ListId.findOne(filter, projection, option);
             console.log("===>GET BATCH READY SUCCESSFUL: ", result?._id);
-            
+
             if(result?._id) return { ...result,_id: result?._id?.toString() }
             else return result;
         } catch (err) {
@@ -186,7 +186,7 @@ const handleNewCrawl = async () => {
     
                     for(item of resultList) {
                         console.log("===>>>>>>START CRAWL NEW IN: ", item.videoId);
-                        let responeNewCrawl = await handleCrawlCommentById(item.videoId, item.nextPage);
+                        let responeNewCrawl = await handleCrawlCommentById(item.videoId, item.nextPage, item.amountFetched);
                         console.log("===>>>>>>>>END CRAWL NEW WITH: ", responeNewCrawl, "\n");
 
                         if(responeNewCrawl === "CRAWL QUOTA EXCEED") {

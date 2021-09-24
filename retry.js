@@ -69,7 +69,7 @@ const retryCrawl = async () => {
     
                     for(item of listVideoRetry) {
                         console.log("===>>>>>>START RETRY IN: ", item.videoId);
-                        let response = await handleCrawlCommentById(item.videoId, item.nextPage);
+                        let response = await handleCrawlCommentById(item.videoId, item.nextPage, item.amountFetched);
                         console.log("===>>>>>>>>END RETRY WITH: ", response, "\n");
 
                         if(response === "CRAWL QUOTA EXCEED") {
