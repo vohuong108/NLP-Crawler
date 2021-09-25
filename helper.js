@@ -34,9 +34,12 @@ const queryVideoId = async(base_url, part, query, relevanceLanguage, regionCode,
             console.log("SEND QUERY SEARCH SUCCESS");
             return res;
         } catch (err) {
-            console.error("ERROR IN CRAWL VIDEO ID");
+            console.error("################################ERROR IN SENT QUERY: ", err?.message);
+            console.log("ERROR CODE: ", err?.response?.status, " ERROR STATUS: ", err?.response?.statusText);
+
+            if(err?.response?.status === 403 && err?.response?.statusText === "quotaExceeded") return "QUERY QUOTA EXCEED";
+
             console.log("=>>>>> Replay ", i, "times");
-            
             if(i === 2) return "FAILED QUERY VIDEO ID";
         }
         await new Promise((resolve, _) => setTimeout(resolve, 1000));

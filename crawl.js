@@ -7,7 +7,9 @@ const mongoose = require('mongoose');
 const base_search_url = "https://youtube.googleapis.com/youtube/v3/search";
 const base_cmt_url = "https://youtube.googleapis.com/youtube/v3/commentThreads";
 // const API_KEY = "AIzaSyCM2zo3xCPcW23oQAPBPkUe08WzuKFhhzs";
-const API_KEY = "AIzaSyBEoXFRdY-pNXuhCwf-83KRH4RO8depHLU";
+// const API_KEY = "AIzaSyBEoXFRdY-pNXuhCwf-83KRH4RO8depHLU";
+const API_KEY = "AIzaSyA5DcsV-8NayNtZCDME6z2uc-VY2C4Wy6o"; // Chi Huong
+
 
 const handleCrawlCommentById = async (videoId, nextPage, amount) => {
     console.log("AMOUNT: ", amount)
@@ -225,6 +227,29 @@ const handleNewCrawl = async () => {
 }
 
 
+const getNextPageCrawlVideoId = async () => {
+    for (let i = 0; i < 3; i += 1) {
+        try {
+            let result = await ListId.findOne({}, ["nextPage", "index", "keywords"], { sort: {"_id": -1}})
+            
+            if(result) {
+                return { index: result.index, nextPage: result.nextPage, keywords: result.keywords };
+            }
+            else return {
+                index: -1,
+                nextPage: "",
+                keywords: []
+            };
+        } catch (err) {
+            console.log("#########################ERROR IN GET NEXTPAGE CRAWL ID", err);
+            console.log("===>>>Replay ", i, "times");
+
+            if(i === 2) return "FAILED GET NEXTPAGE";
+        }
+        await new Promise((resolve, _) => setTimeout(resolve, 1000));
+    }
+}
+
 //Save the list videoId found to mongooDB cloud
 const handleUpdateListData = async (list, keywords, totalOfVideo, nextPage, index) => {
     for(let i= 0; i < 3; i += 1) {
@@ -238,10 +263,9 @@ const handleUpdateListData = async (list, keywords, totalOfVideo, nextPage, inde
                 index: index,
             })
 
-            console.log("SAVED ID SUCCESSFUL IN: ", index);
-            await initializeCommentList(resDocument?._id, resDocument?.videoIds);
-            
-            return "UPDATED LIST DATA";
+            console.log("SAVED ID SUCCESSFUL IN: ", index, " SIZE: ", resDocument?.videoIds?.length);
+
+            return resDocument;
         } catch (err) {
             console.error("ERROR IN UPDATE LIST DATA: ", err);
             console.log("=>>>>> Replay ", i, "times");
@@ -255,76 +279,97 @@ const handleUpdateListData = async (list, keywords, totalOfVideo, nextPage, inde
 //Initialize a record(document) corresponding to the videIds found
 //Each record have {comments: [], nextPage: ""}
 const initializeCommentList = async (parentId, listId) => {
+    
+    let edited_list_id = listId?.map(item => ({
+        parentId: parentId,
+        videoId: item.videoId,
+        comments: [],
+        amountFetched: 0,
+        nextPage: "",
+    }));
 
-    for(const item of listId) {
-
+    for(let i = 0; i < 3; i += 1) {
         try {
-            let res = await ListComment.create({
-                parentId: parentId,
-                videoId: item.videoId,
-                comments: [],
-                amountFetched: 0,
-                nextPage: "",
-            })
-            console.log("ADDED TO INITIAL COMMENT LIST: ", item.videoId);
-            console.log("RES INITIAL COMMENT LIST: ", res);
-        } catch (err) {
-            console.error("ERROR IN INITIAL COMMENT: ", item.videoId);
-        }
+            let res = await ListComment.insertMany(edited_list_id);
+            console.log("ADDED TO INITIAL COMMENT LIST: ", parentId, " SIZE: ", res?.length);
 
+            return "INITED LIST COMMENT";
+
+        } catch (err) {
+            console.error("ERROR IN INITIAL COMMENT: ", parentId, " SIZE: ", listId?.length);
+            console.log("ERROR: ", err);
+            console.log("===>>>REPLAY ", i, "times");
+
+            if(i === 2) return "FAILED INITIAL COMMENT LIST";
+        }
+        await new Promise((resolve, _) => setTimeout(resolve, 1000));
     }
 }
 
 //CRAWL list videoId with keywords
-const handleCrawlVideoID = async (nextPage) => {
+const handleCrawlVideoID = async () => {
     let part="snippet";
-    let query = ["machine%20learning", "robotics", "artificial intelligence"];
+    let query = ["machine learning", "robotics", "artificial intelligence"];
+    let keyword = "";  
     let relevanceLanguage = "en";
-    let regionCode = "US" ;
+    let regionCode = "IN" ;
     let type = "video";
     let maxResults = 50;
-    let fetchedID = 0;
-    let nextPageToken = nextPage;
-    let countDocument = 0;
+    let nextPageToken = "";
+    let indexDocument = 0;
 
-    for(let i = 0; i < 3; i += 1) {
-        try {
-            countDocument = await ListId.estimatedDocumentCount();
-            console.log("COUNTED IN LIST ID: ", countDocument);
-            break;
+    let result_nextPage = await getNextPageCrawlVideoId();
 
-        } catch (err) {
-            console.error("ERROR IN COUNT DOCUMENT: ", err);
-            console.log("=>>>>> Replay ", i, "times");
+    if(result_nextPage !== "FAILED GET NEXTPAGE") {
+        console.log("GET NEXTPAGE SUCCESSFUL: ", result_nextPage);
 
-            if(i === 2) return "FAILED CRAWL VIDEO ID";
+        if(result_nextPage.index > 0 && result_nextPage === "") {
+            let i_key = query.filter(item => item === result_nextPage.keywords[0]);
+            if(i_key === query.length - 1) return "FULLED CRAWL ALL KEYWORD";
+            else keyword = query[i_key + 1];
+            
         }
-        await new Promise((resolve, _) => setTimeout(resolve, 1000));
-        
-    }
+        else if(result_nextPage.index > 0 && result_nextPage !== "") {
+            keyword = result_nextPage.keywords[0];
+
+        } else if(result_nextPage.index < 0) {
+            keyword = query[0];
+        }
+
+        indexDocument = result_nextPage.index + 1;
+        nextPageToken = result_nextPage.nextPage;
+
+        console.log("FILTER QUERY INDEX: ", indexDocument, " KEYQORD: ", keyword, " NEXTPAGE: ", nextPageToken);
+
+    } else return "FAILED CRAWL VIDEO ID";
 
     while(true) {
         
-        let result = await queryVideoId(base_search_url, part, query[2], relevanceLanguage, regionCode, maxResults, type, nextPageToken, API_KEY);
+        let response_query = await queryVideoId(base_search_url, part, keyword, relevanceLanguage, regionCode, maxResults, type, nextPageToken, API_KEY);
         
-        if(result !== "FAILED QUERY VIDEO ID") {
-            let arr = result.data.items.map(item => ({
-                videoId: item.id.videoId,
-                title: item.snippet.title,
-            }));
+        if(response_query === "QUERY QUOTA EXCEED") return "QUERY QUOTA EXCEED";
+        else if(response_query !== "FAILED QUERY VIDEO ID") {
+            
+            totalResults = response_query.data.pageInfo.totalResults;
+            nextPageToken = response_query.data?.nextPageToken;
 
-            totalResults = result.data.pageInfo.totalResults;
-            fetchedID = fetchedID + result.data.items.length;
-            nextPageToken = result.data.nextPageToken;
+            if(response_query.data.items.length > 0) {
+                let arr = response_query.data.items.map(item => ({
+                    videoId: item.id.videoId,
+                    title: item.snippet.title,
+                }));
 
-            if(result.data.items.length > 0) {
-                let result = await handleUpdateListData(arr, [query[2]], totalResults, nextPageToken, countDocument);
+                let result_update_list_id = await handleUpdateListData(arr, [keyword], totalResults, nextPageToken, indexDocument);
+                
+                if(result_update_list_id !== "FAILED UPDATE LIST DATA") {
+                    if(result_update_list_id !== null) {
+                        let result_init = await initializeCommentList(result_update_list_id?._id.toString(), result_update_list_id?.videoIds);
+                    }
 
-                if(result === "UPDATED LIST DATA") {
                     if(!nextPageToken) return "FULLED CRAWL VIDEO ID";
                     else {
-                        countDocument += 1;
-                        await new Promise((resolve, _) => setTimeout(resolve, 888));
+                        indexDocument += 1;
+                        await new Promise((resolve, _) => setTimeout(resolve, 1500));
                     }
                 } 
                 else return "FAILED CRAWL VIDEO ID";
