@@ -6,7 +6,7 @@ const ListId = require("./models/ListId");
 const { default: axios } = require("axios");
 const ListComment = require("./models/ListComment");
 const DetailVideo = require("./models/DetailVideo");
-
+const User = require("./models/User");
 
 
 const tool = async () => {
@@ -22,6 +22,7 @@ const tool = async () => {
         // let res2 = await handleNewCrawl();
         // console.log("=====>>>>RES READY CRARWL: ", res2);
 
+
         // console.log("=====>>>>RUN CRARWL ID");
         // let res3 = await handleCrawlVideoID();
         // console.log("=====>>>>RES CRARWL ID: ", res3);
@@ -34,6 +35,34 @@ const tool = async () => {
         // "614f18c4e2eeb869f39d6fd3"]}});
         // console.log(res);
 
+        while(true) {
+            console.log("=====>>>>RUN CRARWL ID");
+            let res3 = await handleCrawlVideoID();
+            console.log("\n=====>>>>RES CRARWL ID: ", res3);
+            if(res3 === "FULLED CRAWL ALL KEYWORD" || res3 === "QUERY QUOTA EXCEED" || res3 === "FAILED CRAWL VIDEO ID") break;
+    
+        }
+        
+        // let arr = [
+        //     {parentId: "1", videoId: "GwIo3gDZCVQ1", amountFetched: 20},
+        //     {parentId: "2", videoId: "GwIo3gDZCVQ", amountFetched: 30},
+        //     {parentId: "614f11e989ba1a3821313684", videoId: "GwIo3gDZCVQ2", amountFetched: 40},
+        //     {parentId: "4", videoId: "GwIo3gDZCVQ3", amountFetched: 60}
+        // ]
+        // try {
+        //     let res4 = await User.insertMany(arr, {ordered: false});
+        //     console.log("============================");
+        //     console.log("RES: ", res4);
+        //     console.log("RES-CODE: ", res4?.code);
+        //     console.log("============================");
+        // } catch (err) {
+        //     console.log("#============================");
+        //     console.log(err);
+        //     console.log("ERR-CODE: ", err?.code);
+        //     console.log("ERR-CODE: ", err?.writeErrors.length);
+        // }
+
+        
         // console.log("=====>>>>RUN CRAWL VIDEO DETAILS");
         // let res4 = await handleCrawlVideoDetail();
         // console.log("=====>>>>RUN CRAWL VIDEO DETAILS: ", res4);

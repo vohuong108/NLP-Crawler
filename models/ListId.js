@@ -5,6 +5,7 @@ const listId = new mongoose.Schema({
     keywords: Array,
     totalOfVideo: Number,
     nextPage: String,
+    regionCode: String,
     state: { type: String, default: 'READY' },
     index: Number,
 }, { timestamps: { createdAt: 'created_at', updatedAt: 'updated_at' } });
