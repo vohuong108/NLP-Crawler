@@ -22,9 +22,17 @@ const tool = async () => {
         // let res2 = await handleNewCrawl();
         // console.log("=====>>>>RES READY CRARWL: ", res2);
 
-        console.log("=====>>>>RUN CRARWL ID");
-        let res3 = await handleCrawlVideoID();
-        console.log("=====>>>>RES CRARWL ID: ", res3);
+        // console.log("=====>>>>RUN CRARWL ID");
+        // let res3 = await handleCrawlVideoID();
+        // console.log("=====>>>>RES CRARWL ID: ", res3);
+
+        // let res = await ListComment.deleteMany({ parentId: {$in: ["614f18b4e2eeb869f39d6eca", 
+        // "614f18b7e2eeb869f39d6eff", 
+        // "614f18bae2eeb869f39d6f34",
+        // "614f18bee2eeb869f39d6f69",
+        // "614f18c1e2eeb869f39d6f9e",
+        // "614f18c4e2eeb869f39d6fd3"]}});
+        // console.log(res);
 
         // console.log("=====>>>>RUN CRAWL VIDEO DETAILS");
         // let res4 = await handleCrawlVideoDetail();
