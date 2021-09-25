@@ -22,9 +22,14 @@ const tool = async () => {
         // let res2 = await handleNewCrawl();
         // console.log("=====>>>>RES READY CRARWL: ", res2);
 
-        console.log("=====>>>>RUN CRARWL ID");
-        let res3 = await handleCrawlVideoID();
-        console.log("=====>>>>RES CRARWL ID: ", res3);
+        while(true) {
+            console.log("=====>>>>RUN CRARWL ID");
+            let res3 = await handleCrawlVideoID();
+            console.log("\n=====>>>>RES CRARWL ID: ", res3);
+            if(res3 === "FULLED CRAWL ALL KEYWORD" || res3 === "QUERY QUOTA EXCEED") break;
+    
+        }
+        
 
         // console.log("=====>>>>RUN CRAWL VIDEO DETAILS");
         // let res4 = await handleCrawlVideoDetail();

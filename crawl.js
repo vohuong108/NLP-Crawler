@@ -312,7 +312,7 @@ const handleCrawlVideoID = async () => {
     let query = ["machine learning", "robotics", "artificial intelligence"];
     let keyword = "";  
     let relevanceLanguage = "en";
-    let regionCode = "IN" ;
+    let regionCode = "FR" ;
     let type = "video";
     let maxResults = 50;
     let nextPageToken = "";
@@ -323,23 +323,29 @@ const handleCrawlVideoID = async () => {
     if(result_nextPage !== "FAILED GET NEXTPAGE") {
         console.log("GET NEXTPAGE SUCCESSFUL: ", result_nextPage);
 
-        if(result_nextPage.index > 0 && result_nextPage === "") {
-            let i_key = query.filter(item => item === result_nextPage.keywords[0]);
+        if(result_nextPage.index > 0 && result_nextPage.nextPage === "") {
+            let i_key = query.findIndex(item => item === result_nextPage.keywords[0]);
+            console.log("i_key: ", i_key);
+
             if(i_key === query.length - 1) return "FULLED CRAWL ALL KEYWORD";
             else keyword = query[i_key + 1];
             
         }
-        else if(result_nextPage.index > 0 && result_nextPage !== "") {
+        else if(result_nextPage.index > 0 && result_nextPage.nextPage !== "") {
             keyword = result_nextPage.keywords[0];
+            console.log("not null");
 
         } else if(result_nextPage.index < 0) {
             keyword = query[0];
+            console.log("empty");
         }
+
+        if(!keyword) return "FULLED CRAWL ALL KEYWORD";
 
         indexDocument = result_nextPage.index + 1;
         nextPageToken = result_nextPage.nextPage;
 
-        console.log("FILTER QUERY INDEX: ", indexDocument, " KEYQORD: ", keyword, " NEXTPAGE: ", nextPageToken);
+        console.log("FILTER QUERY INDEX: ", indexDocument, " KEYWORD: ", keyword, " NEXTPAGE: ", nextPageToken);
 
     } else return "FAILED CRAWL VIDEO ID";
 
@@ -363,6 +369,7 @@ const handleCrawlVideoID = async () => {
                 
                 if(result_update_list_id !== "FAILED UPDATE LIST DATA") {
                     if(result_update_list_id !== null) {
+                        await new Promise((resolve, _) => setTimeout(resolve, 500));
                         let result_init = await initializeCommentList(result_update_list_id?._id.toString(), result_update_list_id?.videoIds);
                     }
 
