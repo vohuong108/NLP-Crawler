@@ -36,8 +36,10 @@ const queryVideoId = async(base_url, part, query, relevanceLanguage, regionCode,
         } catch (err) {
             console.error("################################ERROR IN SENT QUERY: ", err?.message);
             console.log("ERROR CODE: ", err?.response?.status, " ERROR STATUS: ", err?.response?.statusText);
+            console.error("LIST ERROR: ", err?.response?.data?.error?.errors);
 
-            if(err?.response?.status === 403 && err?.response?.statusText === "quotaExceeded") return "QUERY QUOTA EXCEED";
+            if(err?.response?.data?.error?.errors[0]?.reason ===  'quotaExceeded') return "QUERY QUOTA EXCEED";
+            // else if(err?.response?.status === 403 && err?.response?.statusText === "quotaExceeded") return "";
 
             console.log("=>>>>> Replay ", i, "times");
             if(i === 2) return "FAILED QUERY VIDEO ID";
@@ -57,12 +59,17 @@ const queryComment = async (base_url, part, maxResults, order, textFormat, video
             return res?.data;
     
         } catch (err) {
-            console.error("################################ERROR IN SENT QUERY: ", err?.message);
-            console.log("ERROR CODE: ", err?.response?.status, " ERROR STATUS: ", err?.response?.statusText);
+            console.error("################################ERROR IN SENT QUERY: ", err?.message, " AND ", err?.response?.status, "AND: ", err?.response?.statusText);
+            
+            if(err?.response?.data) {
+                console.error("ERROR DATA: ", err.response.data);
+                console.error("LIST ERROR: ", err.response.data?.error?.errors);
 
+                if(err.response.data?.error?.errors[0]?.reason === "commentsDisabled") return "COMMENT DISABLED";
+                else if(err.response.data?.error?.errors[0]?.reason === "videoNotFound") return "VIDEO NOT FOUND";
+            }
+            
             if(err?.response?.status === 403 && err?.response?.statusText === "quotaExceeded") return "QUERY QUOTA EXCEED";
-            else if(err?.response?.status === 403 && err?.response?.statusText === "Forbidden") return "QUERY 403";
-            else if(err?.response?.status === 404 && err?.response?.statusText === "Not Found") return "QUERY 404";
             
             console.log("=>>>>> Replay ", i, "times");
             if(i === 2) return "FAILED QUERY";
@@ -88,7 +95,7 @@ const queryDetail = async (base_url, part, list_ids, maxResults, API_KEY) => {
             console.log("!!!!!!!!!ERROR CODE: ", err?.response?.status, " ERROR STATUS: ", err?.response?.statusText);
 
             if(err?.response?.status === 403 && err?.response?.statusText === "quotaExceeded") return "FAILED QUERY BY QUOTA EXCEEDED";
-            else if(err?.response?.status === 403 && err?.response?.statusText === "Forbidden") return "QUERY 403";
+            // else if(err?.response?.status === 403 && err?.response?.statusText === "Forbidden") return "QUERY 403";
             
             console.log("=>>>>> Replay ", i, "times");
             if(i === 2) return "FAILED QUERY DETAIL";

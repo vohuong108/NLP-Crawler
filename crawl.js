@@ -2,16 +2,24 @@ const ListComment = require('./models/ListComment');
 const ListId = require('./models/ListId');
 const {queryVideoId, queryComment} = require('./helper');
 const mongoose = require('mongoose');
-
+const LIST_API = require("./api");
+const LIST_REGION_CODE = require("./regionCode");
 
 const base_search_url = "https://youtube.googleapis.com/youtube/v3/search";
 const base_cmt_url = "https://youtube.googleapis.com/youtube/v3/commentThreads";
-// const API_KEY = "AIzaSyCM2zo3xCPcW23oQAPBPkUe08WzuKFhhzs";
-const API_KEY = "AIzaSyBEoXFRdY-pNXuhCwf-83KRH4RO8depHLU";
+const API_KEY = "AIzaSyCM2zo3xCPcW23oQAPBPkUe08WzuKFhhzs";
+// const API_KEY = "AIzaSyBEoXFRdY-pNXuhCwf-83KRH4RO8depHLU";
 // const API_KEY = "AIzaSyA5DcsV-8NayNtZCDME6z2uc-VY2C4Wy6o"; // Chi Huong
+// const API_KEY = "AIzaSyDT5ZKc0uSWocxiQ6nDV0qKKPwCor0rni8"; //hai
+// const API_KEY = "AIzaSyCIIl8Ulk5m0bJvRg1xsD-x8c6-8Gqge0A"; //hoa
+// const API_KEY = "AIzaSyCVX_MJ2M5Rw2aFljrCA5apPZWy1re5fOE"; //iris
+// const API_KEY = "AIzaSyBjYe5ADqEVIYn0h47StDN059gTERQ1zI4"; //ytb
 
 
-const handleCrawlCommentById = async (videoId, nextPage, amount) => {
+
+
+
+const handleCrawlCommentById = async (batchId, videoId, nextPage, amount) => {
     console.log("AMOUNT: ", amount)
     let part = ['snippet', 'replies'];
     let maxResults = 100;
@@ -19,14 +27,15 @@ const handleCrawlCommentById = async (videoId, nextPage, amount) => {
     let textFormat = 'plainText';
     let amountFetched = amount;
     let nextPageToken = nextPage;
+     
 
     while(true) {
-      
+        
         let responeQuery = await queryComment(base_cmt_url, part, maxResults, order, textFormat, videoId, API_KEY, nextPageToken);
         
         if(responeQuery === "QUERY QUOTA EXCEED") return "CRAWL QUOTA EXCEED";
-        else if(responeQuery === "QUERY 403" || responeQuery === "QUERY 404") return "FULLED CRAWL";
-        else if(responeQuery !== 'FAILED QUERY') {
+        else if(responeQuery === "COMMENT DISABLED" || responeQuery === "VIDEO NOT FOUND") return "FULLED CRAWL";
+        else if(responeQuery !== "FAILED QUERY") {
             
             if(responeQuery?.items?.length > 0) {
                 nextPageToken = responeQuery.nextPageToken;
@@ -50,7 +59,7 @@ const handleCrawlCommentById = async (videoId, nextPage, amount) => {
                     }))
                 }));
 
-                let responeUpdateData = await handleUpdateCommentData(videoId, listComments, amountFetched, nextPageToken);
+                let responeUpdateData = await handleUpdateCommentData(batchId, videoId, listComments, amountFetched, nextPageToken);
 
                 if (responeUpdateData !== "FAILED UPDATE DATA") console.log("=>>>>> Saved ", amountFetched, "comments");
                 else return "FAILED CRAWL";
@@ -68,12 +77,12 @@ const handleCrawlCommentById = async (videoId, nextPage, amount) => {
     }
 }
 
-const handleUpdateCommentData = async (videoId, listComments, amountFetched, nextPage) => {
+const handleUpdateCommentData = async (batchId, videoId, listComments, amountFetched, nextPage) => {
     //TODO: re-run 3 times when fail occur
     for(let i = 0; i < 3; i+=1) {
         try {
             await ListComment.findOneAndUpdate(
-                {videoId: videoId},
+                {parentId: batchId, videoId: videoId},
                 {$push: {comments: listComments}, amountFetched: amountFetched, nextPage: nextPage ? nextPage : ""},
                 {upsert: true, useFindAndModify: false}
     
@@ -96,16 +105,21 @@ const handleUpdateCommentData = async (videoId, listComments, amountFetched, nex
 //FIND one batch with state field is "READY"
 const getBatchReady = async (index) => {
     //TODO: re-run 3 times when fail occur
+    console.log("BATCH READY INDEX: ", index);
     for(let i = 0; i < 3; i += 1) {
         try {
             let filter = index !== null ? { state: 'READY', index: {$gt: index} } : { state: 'READY' };
             let projection = ['_id', 'videoIds', 'state', 'index'];
             let option = { sort: {index: 1}};
+            console.log("FILTER BATCH READY: ", filter);
 
             let result = await ListId.findOne(filter, projection, option);
             console.log("===>GET BATCH READY SUCCESSFUL: ", result?._id);
 
-            if(result?._id) return { ...result,_id: result?._id?.toString() }
+            if(result?._id) return {
+                ...result._doc,
+                _id: result?._id?.toString(),
+            }
             else return result;
         } catch (err) {
             console.error("################################ERROR IN GET READY: ", err);
@@ -119,15 +133,17 @@ const getBatchReady = async (index) => {
 
 //FIND list videoId in ListComment model that don't have {nextPage: null, amountFetched > 0}
 const getListVideoNewCrawl = async (batchId) => {
-    console.log("GET LIST READY BY BATCH ID: ", batchId);
+    
     for (let i = 0; i < 3; i +=1 ) {
         try {
             let filter = { parentId: batchId, $nor: [{nextPage: null}, {amountFetched: {$gt: 0}}] }
             let projection = ['videoId', 'nextPage', 'amountFetched'];
+            console.log("FILTER LIST READY: ", filter);
             let items = await ListComment.find(filter, projection);
             
             console.log("===>>GET LIST NEW CRAWL SUCCESS: ", items?.length);
-            console.log("LIST NEW CRAWL: ", items?.map(i => i.videoId));
+            console.log("LIST NEW CRAWL: ", items?.map(i => `${i.videoId} - ${i?.amountFetched}`));
+            
             return items;
         } catch (err) {
             console.error("################################ERROR IN GET LIST VIDEO READY BY BATCH ID", err); 
@@ -189,7 +205,7 @@ const handleNewCrawl = async () => {
     
                     for(item of resultList) {
                         console.log("===>>>>>>START CRAWL NEW IN: ", item.videoId);
-                        let responeNewCrawl = await handleCrawlCommentById(item.videoId, item.nextPage, item.amountFetched);
+                        let responeNewCrawl = await handleCrawlCommentById(batchId, item.videoId, item.nextPage, item.amountFetched);
                         console.log("===>>>>>>>>END CRAWL NEW WITH: ", responeNewCrawl, "\n");
 
                         if(responeNewCrawl === "CRAWL QUOTA EXCEED") {
@@ -314,18 +330,19 @@ const initializeCommentList = async (parentId, listId) => {
 }
 
 //CRAWL list videoId with keywords
-const handleCrawlVideoID = async () => {
+const handleCrawlVideoID = async (index_api) => {
     let part="snippet";
     let query = ["machine learning", "robotics", "artificial intelligence"];
     let keyword = "";  
     let relevanceLanguage = "en";
-    let listRegionCode = ["US", "FR", "ID", "AU", "SG", "CA", "NZ", "AG", "BS", "BM", "DM"];
+    let listRegionCode = LIST_REGION_CODE;
+    let SELECTED_API_KEY = LIST_API[index_api];
     let regionCode = "";
     let type = "video";
     let maxResults = 50;
     let nextPageToken = "";
     let indexDocument = 0;
-
+    
     let result_nextPage = await getNextPageCrawlVideoId();
 
     if(result_nextPage !== "FAILED GET NEXTPAGE") {
@@ -369,7 +386,7 @@ const handleCrawlVideoID = async () => {
 
     while(true) {
         
-        let response_query = await queryVideoId(base_search_url, part, keyword, relevanceLanguage, regionCode, maxResults, type, nextPageToken, API_KEY);
+        let response_query = await queryVideoId(base_search_url, part, keyword, relevanceLanguage, regionCode, maxResults, type, nextPageToken, SELECTED_API_KEY);
         
         if(response_query === "QUERY QUOTA EXCEED") return "QUERY QUOTA EXCEED";
         else if(response_query !== "FAILED QUERY VIDEO ID") {

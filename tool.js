@@ -34,12 +34,18 @@ const tool = async () => {
         // "614f18c1e2eeb869f39d6f9e",
         // "614f18c4e2eeb869f39d6fd3"]}});
         // console.log(res);
+        let index_api = 38;
 
         while(true) {
             console.log("=====>>>>RUN CRARWL ID");
-            let res3 = await handleCrawlVideoID();
+            console.log("INDEX API: ", index_api);
+            let res3 = await handleCrawlVideoID(index_api);
             console.log("\n=====>>>>RES CRARWL ID: ", res3);
-            if(res3 === "FULLED CRAWL ALL KEYWORD" || res3 === "QUERY QUOTA EXCEED" || res3 === "FAILED CRAWL VIDEO ID") break;
+            
+            if(res3 === "QUERY QUOTA EXCEED") {
+                index_api += 1;
+            }
+            else if(res3 === "FULLED CRAWL ALL KEYWORD" || res3 === "FAILED CRAWL VIDEO ID") break;
     
         }
         
