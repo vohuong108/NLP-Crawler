@@ -91,10 +91,11 @@ const queryDetail = async (base_url, part, list_ids, maxResults, API_KEY) => {
             return res?.data;
     
         } catch (err) {
-            console.error("!!!!!!!!!ERROR IN SENT QUERY DETAIL: ", err?.message);
-            console.log("!!!!!!!!!ERROR CODE: ", err?.response?.status, " ERROR STATUS: ", err?.response?.statusText);
+            console.error("################################ERROR IN SENT QUERY: ", err?.message);
+            console.log("ERROR CODE: ", err?.response?.status, " ERROR STATUS: ", err?.response?.statusText);
+            console.error("LIST ERROR: ", err?.response?.data?.error?.errors);
 
-            if(err?.response?.status === 403 && err?.response?.statusText === "quotaExceeded") return "FAILED QUERY BY QUOTA EXCEEDED";
+            if(err?.response?.data?.error?.errors[0]?.reason ===  'quotaExceeded') return "QUERY QUOTA EXCEED";
             // else if(err?.response?.status === 403 && err?.response?.statusText === "Forbidden") return "QUERY 403";
             
             console.log("=>>>>> Replay ", i, "times");

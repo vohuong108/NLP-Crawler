@@ -318,7 +318,7 @@ const initializeCommentList = async (parentId, listId) => {
             console.log("ERROR: ", err?.code);
 
             if(err?.code === 11000) {
-                console.log(`ADDED SUCCESSFUL = ${listId?.length} - ${err?.writeErrors.length} = ${listId?.lengt - err?.writeErrors.length}\n`);
+                console.log(`ADDED SUCCESSFUL = ${listId?.length} - ${err?.writeErrors.length} = ${listId?.length - err?.writeErrors.length}\n`);
                 return "INITED LIST COMMENT WITH DUPLICATE";
             }
             
