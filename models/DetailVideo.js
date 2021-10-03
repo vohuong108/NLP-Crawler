@@ -14,7 +14,8 @@ const detailVideoSchema = new mongoose.Schema({
     url: String,
     tags: { type: Array, default: [] },
     categoryId: Number,
-    other: Array
+    other: Array,
+    keywords: { type: Array, default: [] },
 
 }, { timestamps: { createdAt: 'created_at', updatedAt: 'updated_at' }});
 

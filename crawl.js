@@ -243,6 +243,9 @@ const handleNewCrawl = async () => {
 }
 
 
+
+
+
 const getNextPageCrawlVideoId = async () => {
     for (let i = 0; i < 3; i += 1) {
         try {
@@ -395,10 +398,7 @@ const handleCrawlVideoID = async (index_api) => {
             nextPageToken = response_query.data?.nextPageToken;
 
             if(response_query.data.items.length > 0) {
-                let arr = response_query.data.items.map(item => ({
-                    videoId: item.id.videoId,
-                    title: item.snippet.title,
-                }));
+                let arr = response_query.data.items.map(item => item.id.videoId);
 
                 let result_update_list_id = await handleUpdateListData(arr, [keyword], totalResults, nextPageToken, indexDocument, regionCode);
                 

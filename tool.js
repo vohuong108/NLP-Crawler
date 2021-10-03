@@ -1,6 +1,6 @@
 const retryCrawl = require("./retry");
 const { handleNewCrawl, handleCrawlVideoID, initializeCommentList } = require("./crawl");
-const { handleCrawlVideoDetail, getAllVideoIdInListComment } = require("./crawlDetailVideo");
+const { handleCrawlVideoDetail } = require("./crawlDetailVideo");
 const connectDB = require("./db");
 const ListId = require("./models/ListId");
 const { default: axios } = require("axios");
@@ -23,7 +23,7 @@ const tool = async () => {
         // console.log("=====>>>>RES READY CRARWL: ", res2);
 
 
-        let index_api = 79;
+        let index_api = 1;
 
         // while(true) {
         //     console.log("=====>>>>RUN CRARWL ID");
@@ -39,11 +39,12 @@ const tool = async () => {
         // }
 
         
-        console.log("=====>>>>RUN CRAWL VIDEO DETAILS");
-        console.log("INDEX API: ", index_api);
-        let res3 = await handleCrawlVideoDetail(index_api);
-        console.log("\n=====>>>>CRAWL VIDEO DETAILS: ", res3);
-              
+        // console.log("=====>>>>RUN CRAWL VIDEO DETAILS");
+        // console.log("INDEX API: ", index_api);
+        // let res3 = await handleCrawlVideoDetail(index_api);
+        // console.log("\n=====>>>>CRAWL VIDEO DETAILS: ", res3);
+        // let res3 = await DetailVideo.update({parentId: "614f3f36ec3e6e2c70016cc5"}, {$set: {keywords: ["machine learning"]}});
+        // console.log(res3);
     }
 }
 
