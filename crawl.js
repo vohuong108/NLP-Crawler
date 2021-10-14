@@ -7,7 +7,7 @@ const LIST_REGION_CODE = require("./regionCode");
 
 const base_search_url = "https://youtube.googleapis.com/youtube/v3/search";
 const base_cmt_url = "https://youtube.googleapis.com/youtube/v3/commentThreads";
-const API_KEY = "AIzaSyCM2zo3xCPcW23oQAPBPkUe08WzuKFhhzs";
+// const API_KEY = "AIzaSyCM2zo3xCPcW23oQAPBPkUe08WzuKFhhzs";
 // const API_KEY = "AIzaSyBEoXFRdY-pNXuhCwf-83KRH4RO8depHLU";
 // const API_KEY = "AIzaSyA5DcsV-8NayNtZCDME6z2uc-VY2C4Wy6o"; // Chi Huong
 // const API_KEY = "AIzaSyDT5ZKc0uSWocxiQ6nDV0qKKPwCor0rni8"; //hai
@@ -241,8 +241,6 @@ const handleNewCrawl = async () => {
     
 
 }
-
-
 
 
 

@@ -7,9 +7,9 @@ const queryVideoId = async(base_url, part, query, relevanceLanguage, regionCode,
             + "?part=" + part 
             + "&pageToken=" + pageToken 
             + "&q=" + query 
-            + "&regionCode=" + regionCode
+            // + "&regionCode=" + regionCode
             + "&maxResults=" + maxResults
-            + "&relevanceLanguage=" + relevanceLanguage
+            // + "&relevanceLanguage=" + relevanceLanguage
             + "&type=" + type 
             + "&key=" + API_KEY;
 
@@ -17,9 +17,9 @@ const queryVideoId = async(base_url, part, query, relevanceLanguage, regionCode,
         url = base_url 
             + "?part=" + part
             + "&q=" + query
-            + "&regionCode=" + regionCode
+            // + "&regionCode=" + regionCode
             + "&maxResults=" + maxResults
-            + "&relevanceLanguage=" + relevanceLanguage
+            // + "&relevanceLanguage=" + relevanceLanguage
             + "&type=" + type 
             + "&key=" + API_KEY;
     }
@@ -39,7 +39,6 @@ const queryVideoId = async(base_url, part, query, relevanceLanguage, regionCode,
             console.error("LIST ERROR: ", err?.response?.data?.error?.errors);
 
             if(err?.response?.data?.error?.errors[0]?.reason ===  'quotaExceeded') return "QUERY QUOTA EXCEED";
-            // else if(err?.response?.status === 403 && err?.response?.statusText === "quotaExceeded") return "";
 
             console.log("=>>>>> Replay ", i, "times");
             if(i === 2) return "FAILED QUERY VIDEO ID";

@@ -1,7 +1,10 @@
 const mongoose = require('mongoose');
 
 // const uri = "mongodb+srv://nlpUser:nlpuser12345@cluster0.zccf9.mongodb.net/nlpDatabase?retryWrites=true&w=majority";
-const uri = "mongodb+srv://HuongNguyen:abc**123@cluster0.lo0s4.mongodb.net/PROJETNLP?retryWrites=true&w=majority";
+// const uri = "mongodb+srv://HuongNguyen:abc**123@cluster0.lo0s4.mongodb.net/PROJETNLP?retryWrites=true&w=majority";
+// const uri = "mongodb+srv://nlpSubDB:nlp12345@cluster0.5guij.mongodb.net/nlpSubDB?retryWrites=true&w=majority";
+const uri = "mongodb+srv://nlpUser:nlp12345@cluster0.lslkw.mongodb.net/nlpSubYtb?retryWrites=true&w=majority";
+
 
 const connectDB = async () => {
     for(let i = 0; i < 3; i += 1) {
