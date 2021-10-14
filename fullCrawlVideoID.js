@@ -2,6 +2,7 @@ const ListComment = require('./models/ListComment');
 const ListId = require('./models/ListId');
 const {queryVideoId} = require('./helper');
 const LIST_API = require("./api");
+const LIST_REGION_CODE = require("./regionCode");
 const base_search_url = "https://youtube.googleapis.com/youtube/v3/search";
 
 
@@ -96,7 +97,9 @@ const handleCrawlVideoID = async (index_api) => {
     let part="snippet";
     let query = ["machine learning", "robotics", "artificial intelligence"];
     let keyword = "";
+    let listRegionCode = LIST_REGION_CODE;
     let SELECTED_API_KEY = LIST_API[index_api];
+    let regionCode = "";
     let type = "video";
     let maxResults = 50;
     let nextPageToken = "";
@@ -109,51 +112,52 @@ const handleCrawlVideoID = async (index_api) => {
 
         if(result_nextPage.index > 0 && result_nextPage.nextPage === "") {
             let i_key = query.findIndex(item => item === result_nextPage.keywords[0]);
-            console.log("i_key: ", i_key);
+            let i_code = listRegionCode.findIndex(item => item === result_nextPage.regionCode);
+            console.log("i_key: ", i_key, "i_code: ", i_code);
 
-            if(i_key === query.length - 1) return "FULLED CRAWL ALL KEYWORD";
-            else if(i_key === query.length - 1) {
+            if(i_key === query.length - 1 && i_code === listRegionCode.length - 1) return "FULLED CRAWL ALL KEYWORD";
+            else if(i_key === query.length - 1 && i_code < listRegionCode.length - 1) {
+                regionCode = listRegionCode[i_code + 1];
                 keyword = query[0];
             }
             else if(i_key < query.length - 1) {
+                regionCode = result_nextPage.regionCode;
                 keyword = query[i_key + 1];
             }
             
         }
         else if(result_nextPage.index > 0 && result_nextPage.nextPage !== "") {
             keyword = result_nextPage.keywords[0];
+            regionCode = result_nextPage.regionCode;
             console.log("not null");
 
         } else if(result_nextPage.index < 0) {
             keyword = query[0];
+            regionCode = listRegionCode[0];
             console.log("empty");
         }
 
-        if(!keyword) return "FULLED CRAWL ALL KEYWORD";
+        if(!keyword || !regionCode) return "FULLED CRAWL ALL KEYWORD";
 
         indexDocument = result_nextPage.index + 1;
         nextPageToken = result_nextPage.nextPage;
 
-        console.log("FILTER QUERY INDEX: ", indexDocument, " KEYWORD: ", keyword, " NEXTPAGE: ", nextPageToken, "REGION CODE: ");
+        console.log("FILTER QUERY INDEX: ", indexDocument, " KEYWORD: ", keyword, " NEXTPAGE: ", nextPageToken, "REGION CODE: ", regionCode);
 
     } else return "FAILED CRAWL VIDEO ID";
 
     while(true) {
         
-        let response_query = await queryVideoId(base_search_url, part, keyword, null, null, maxResults, type, nextPageToken, SELECTED_API_KEY);
+        let response_query = await queryVideoId(base_search_url, part, keyword, null, regionCode, maxResults, type, nextPageToken, SELECTED_API_KEY);
         
         if(response_query === "QUERY QUOTA EXCEED") return "QUERY QUOTA EXCEED";
         else if(response_query !== "FAILED QUERY VIDEO ID") {
             
-            let regionCode = response_query.data.regionCode;
             totalResults = response_query.data.pageInfo.totalResults;
             nextPageToken = response_query.data?.nextPageToken;
 
             if(response_query.data.items.length > 0) {
-                let arr = response_query.data.items.map(item => ({
-                    videoId: item.id.videoId,
-                    title: item.snippet.title,
-                }));
+                let arr = response_query.data.items.map(item => ({ videoId: item.id.videoId, title: item.snippet.title}));
 
                 let result_update_list_id = await handleUpdateListData(arr, [keyword], totalResults, nextPageToken, indexDocument, regionCode);
                 
