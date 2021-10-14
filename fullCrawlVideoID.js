@@ -62,7 +62,7 @@ const initializeCommentList = async (parentId, listId) => {
     
     let edited_list_id = listId?.map(item => ({
         parentId: parentId,
-        videoId: item,
+        videoId: item.videoId,
         comments: [],
         amountFetched: 0,
         nextPage: "",
@@ -150,7 +150,10 @@ const handleCrawlVideoID = async (index_api) => {
             nextPageToken = response_query.data?.nextPageToken;
 
             if(response_query.data.items.length > 0) {
-                let arr = response_query.data.items.map(item => item.id.videoId);
+                let arr = response_query.data.items.map(item => ({
+                    videoId: item.id.videoId,
+                    title: item.snippet.title,
+                }));
 
                 let result_update_list_id = await handleUpdateListData(arr, [keyword], totalResults, nextPageToken, indexDocument, regionCode);
                 
