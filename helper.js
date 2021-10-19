@@ -104,5 +104,31 @@ const queryDetail = async (base_url, part, list_ids, maxResults, API_KEY) => {
     }
 }
 
-module.exports = {queryVideoId, queryComment, queryDetail};
+const queryUpdateComment = async (base_url, id, key) => {
+    let url = `${base_url}?part=snippet&id=${id}&key=${key}`;
+    
+    for(let i=0; i<3; i += 1) {
+        try {
+            let res = await axios.get(url);
+            console.log("SEND QUERY UPDATE COMMENT SUCCESS");
+            return res?.data;
+    
+        } catch (err) {
+            console.error("################################ERROR IN SENT QUERY: ", err?.message, " AND ", err?.response?.status, "AND: ", err?.response?.statusText);
+            
+            if(err?.response?.data) {
+                console.error("ERROR DATA: ", err.response.data);
+                console.error("LIST ERROR: ", err.response.data?.error?.errors);
+            }
+            
+            if(err?.response?.status === 403 && err?.response?.statusText === "quotaExceeded") return "QUERY QUOTA EXCEED";
+            
+            console.log("=>>>>> Replay ", i, "times");
+            if(i === 2) return "FAILED QUERY";
+        }
+        await new Promise((resolve, _) => setTimeout(resolve, 1000));
+    }
+}
+
+module.exports = {queryVideoId, queryComment, queryDetail, queryUpdateComment};
 

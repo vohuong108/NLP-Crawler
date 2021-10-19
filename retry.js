@@ -33,7 +33,10 @@ const getListVideoRetry = async (batchId) => {
     
     for (let i = 0; i < 3; i += 1) {
         try {
-            let filter = { parentId: batchId, $nor: [{nextPage: null}, {amountFetched: {$gt: 0}}] }
+            let filter = { parentId: batchId, $or: [
+                {$and: [{amountFetched: {$gt: 0}}, {nextPage: {$ne: ""}}]},
+                {$and: [{amountFetched: 0}, {nextPage: ""}]}
+            ]}
             let projection = ['videoId', 'nextPage', 'amountFetched'];
             console.log("FILTER LIST RETRY: ", filter);
             let items = await ListComment.find(filter, projection);

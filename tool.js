@@ -1,14 +1,14 @@
-// const retryCrawl = require("./retry");
-// const { handleNewCrawl, handleCrawlVideoID, initializeCommentList } = require("./crawl");
-// const { handleCrawlVideoDetail } = require("./crawlDetailVideo");
-const { handleCrawlVideoID } = require("./fullCrawlVideoID");
+const retryCrawl = require("./retry");
+const { handleNewCrawl, handleCrawlVideoID, initializeCommentList } = require("./crawl");
+const { handleCrawlVideoDetail } = require("./crawlDetailVideo");
+// const { handleCrawlVideoID } = require("./fullCrawlVideoID");
+const { handleCrawlUpdateComment } = require("./updateComment");
 const connectDB = require("./db");
 const ListId = require("./models/ListId");
 const { default: axios } = require("axios");
 const ListComment = require("./models/ListComment");
 const DetailVideo = require("./models/DetailVideo");
 const ListTopComment = require("./models/ListTopComment");
-const User = require("./models/User");
 
 
 const tool = async () => {
@@ -26,16 +26,29 @@ const tool = async () => {
 
         let index_api = 0;
 
+        // while(true) {
+        //     console.log("=====>>>>RUN CRARWL ID");
+        //     console.log("INDEX API: ", index_api);
+        //     let res3 = await handleCrawlVideoID(index_api);
+        //     console.log("\n=====>>>>RES CRARWL ID: ", res3);
+            
+        //     if(res3 === "QUERY QUOTA EXCEED") {
+        //         index_api += 1;
+        //     }
+        //     else if(res3 === "FULLED CRAWL ALL KEYWORD" || res3 === "FAILED CRAWL VIDEO ID") break;
+    
+        // }
+
         while(true) {
-            console.log("=====>>>>RUN CRARWL ID");
+            console.log("=====>>>>RUN UPDATE COMMENT");
             console.log("INDEX API: ", index_api);
-            let res3 = await handleCrawlVideoID(index_api);
-            console.log("\n=====>>>>RES CRARWL ID: ", res3);
+            let res3 = await handleCrawlUpdateComment(index_api);
+            console.log("\n=====>>>>RES UPDATE COMMENT: ", res3);
             
             if(res3 === "QUERY QUOTA EXCEED") {
                 index_api += 1;
             }
-            else if(res3 === "FULLED CRAWL ALL KEYWORD" || res3 === "FAILED CRAWL VIDEO ID") break;
+            else if(res3 === "FULLED UPDATED" || res3 === "FAILED CRAWL") break;
     
         }
 
