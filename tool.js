@@ -34,7 +34,7 @@ const tool = async () => {
             // if(res3 === "QUERY QUOTA EXCEED") {
             //     index_api += 1;
             // }
-            // else if(res3 === "FULLED CRAWL ALL KEYWORD" || res3 === "FAILED CRAWL VIDEO ID") break;
+            // else if(res3 === "FULLED CRAWL ALL KEYWORD" || res3 === "FAILED CRAWL VIDEO ID" || "EXCEED LIST API") break;
 
             console.log("=====>>>>RUN CRAWL VIDEO DETAILS");
             console.log("INDEX API: ", index_api);
@@ -44,7 +44,7 @@ const tool = async () => {
             if(res3 === "QUERY QUOTA EXCEED") {
                 index_api += 1;
             }
-            else if(res3 === "FULLED DETAIL" || res3 === "FAILED UPDATE VIDEO DETAIL") break;
+            else if(res3 === "FULLED DETAIL" || res3 === "FAILED UPDATE VIDEO DETAIL" || "EXCEED LIST API") break;
     
         }
 

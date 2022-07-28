@@ -66,6 +66,10 @@ const handleUpdateVideoDetail = async (list_details) => {
 }
 
 const handleCrawlVideoDetail = async (index_api) => {
+    if(index_api >= LIST_API.length) {
+        return "EXCEED LIST API";
+    }
+    
     let part = ['snippet', 'contentDetails', 'statistics', 'topicDetails'];
     let maxResults = 50;
     let batchIndex = null;

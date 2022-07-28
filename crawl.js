@@ -339,6 +339,10 @@ const initializeCommentList = async (parentId, listId) => {
 
 //CRAWL list videoId with keywords
 const handleCrawlVideoID = async (index_api) => {
+    if(index_api >= LIST_API.length) {
+        return "EXCEED LIST API";
+    }
+    
     let part="snippet";
     let query = ["machine learning", "robotics", "artificial intelligence"];
     let keyword = "";  
