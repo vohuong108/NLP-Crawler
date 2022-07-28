@@ -12,7 +12,6 @@ const ListTopComment = require("./models/ListTopComment");
 
 
 const tool = async () => {
-    
     let isConnected = await connectDB();
 
     if(isConnected === "CONNECTED TO DATABASE") {
@@ -26,31 +25,31 @@ const tool = async () => {
 
         let index_api = 0;
 
-        // while(true) {
-        //     console.log("=====>>>>RUN CRARWL ID");
-        //     console.log("INDEX API: ", index_api);
-        //     let res3 = await handleCrawlVideoID(index_api);
-        //     console.log("\n=====>>>>RES CRARWL ID: ", res3);
-            
-        //     if(res3 === "QUERY QUOTA EXCEED") {
-        //         index_api += 1;
-        //     }
-        //     else if(res3 === "FULLED CRAWL ALL KEYWORD" || res3 === "FAILED CRAWL VIDEO ID") break;
-    
-        // }
-
         while(true) {
-            console.log("=====>>>>RUN UPDATE COMMENT");
+            console.log("=====>>>>RUN CRARWL ID");
             console.log("INDEX API: ", index_api);
-            let res3 = await handleCrawlUpdateComment(index_api);
-            console.log("\n=====>>>>RES UPDATE COMMENT: ", res3);
+            let res3 = await handleCrawlVideoID(index_api);
+            console.log("\n=====>>>>RES CRARWL ID: ", res3);
             
             if(res3 === "QUERY QUOTA EXCEED") {
                 index_api += 1;
             }
-            else if(res3 === "FULLED UPDATED" || res3 === "FAILED CRAWL") break;
+            else if(res3 === "FULLED CRAWL ALL KEYWORD" || res3 === "FAILED CRAWL VIDEO ID") break;
     
         }
+
+        // while(true) {
+        //     console.log("=====>>>>RUN UPDATE COMMENT");
+        //     console.log("INDEX API: ", index_api);
+        //     let res3 = await handleCrawlUpdateComment(index_api);
+        //     console.log("\n=====>>>>RES UPDATE COMMENT: ", res3);
+            
+        //     if(res3 === "QUERY QUOTA EXCEED") {
+        //         index_api += 1;
+        //     }
+        //     else if(res3 === "FULLED UPDATED" || res3 === "FAILED CRAWL") break;
+    
+        // }
 
         
         // console.log("=====>>>>RUN CRAWL VIDEO DETAILS");

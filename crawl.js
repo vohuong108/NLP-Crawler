@@ -262,7 +262,7 @@ const getNextPageCrawlVideoId = async () => {
                 regionCode: "",
             };
         } catch (err) {
-            console.log("#########################ERROR IN GET NEXTPAGE CRAWL ID", err);
+            console.log("[DATABSE] ERROR IN GET NEXTPAGE CRAWL ID", err);
             console.log("===>>>Replay ", i, "times");
 
             if(i === 2) return "FAILED GET NEXTPAGE";
@@ -350,7 +350,7 @@ const handleCrawlVideoID = async (index_api) => {
     let result_nextPage = await getNextPageCrawlVideoId();
 
     if(result_nextPage !== "FAILED GET NEXTPAGE") {
-        console.log("GET NEXTPAGE SUCCESSFUL: ", result_nextPage);
+        console.log("GET NEXTPAGE CRAWL VIDEOID SUCCESSFUL: ", result_nextPage);
 
         if(result_nextPage.index > 0 && result_nextPage.nextPage === "") {
             let i_key = query.findIndex(item => item === result_nextPage.keywords[0]);
