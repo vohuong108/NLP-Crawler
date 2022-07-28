@@ -26,7 +26,7 @@
 // ];
 
 const listRegionCode = [
-    "VN", "US", "FR", "ID", "AU", "GB", "SG", "CA", "FI", "DE", "SE",
+    "US", "VN", "FR", "ID", "AU", "GB", "SG", "CA", "FI", "DE", "SE",
     "KR", "DK", "NL", "NO", "JP", "CN", "LU", "AE", "EE", "CH",
     "IL", "IN", "ES", "BE", "PT", "RU", "BR", "IE", "PL", "HK", 
     "SA", "TW", "MT", "CZ", "IS", "MX", "LT", "QA", "MY", "TR",

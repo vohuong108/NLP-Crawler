@@ -5,21 +5,27 @@ const queryVideoId = async(base_url, part, query, relevanceLanguage, regionCode,
     if(pageToken) {
         url = base_url 
             + "?part=" + part 
-            + "&pageToken=" + pageToken 
+            + "&pageToken=" + pageToken
+            + "&order=date"
+            + "&publishedAfter=2021-09-30T06%3A29%3A59Z"
+            + "&publishedBefore=2022-07-27T23%3A59%3A59Z"
             + "&q=" + query 
-            // + "&regionCode=" + regionCode
+            + "&regionCode=" + regionCode
             + "&maxResults=" + maxResults
-            // + "&relevanceLanguage=" + relevanceLanguage
+            + "&relevanceLanguage=" + relevanceLanguage
             + "&type=" + type 
             + "&key=" + API_KEY;
 
     } else {
         url = base_url 
             + "?part=" + part
+            + "&order=date"
+            + "&publishedAfter=2021-09-30T06%3A29%3A59Z"
+            + "&publishedBefore=2022-07-27T23%3A59%3A59Z"
             + "&q=" + query
-            // + "&regionCode=" + regionCode
+            + "&regionCode=" + regionCode
             + "&maxResults=" + maxResults
-            // + "&relevanceLanguage=" + relevanceLanguage
+            + "&relevanceLanguage=" + relevanceLanguage
             + "&type=" + type 
             + "&key=" + API_KEY;
     }

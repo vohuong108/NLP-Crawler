@@ -7,6 +7,7 @@ const listId = new mongoose.Schema({
     nextPage: String,
     regionCode: String,
     state: { type: String, default: 'READY' },
+    size: Number,
     index: Number,
 }, { timestamps: { createdAt: 'created_at', updatedAt: 'updated_at' } });
 

@@ -281,15 +281,19 @@ const handleUpdateListData = async (list, keywords, totalOfVideo, nextPage, inde
                 totalOfVideo: totalOfVideo,
                 nextPage: nextPage ? nextPage : "",
                 state: "READY",
+                size: list.length || 0,
                 index: index,
                 regionCode: regionCode,
             })
 
-            console.log("SAVED ID SUCCESSFUL IN: ", index, " SIZE: ", resDocument?.videoIds?.length);
+            console.log("SAVED ID SUCCESSFUL IN: ", index, " INPUT: ", list.length, " SIZE: ", resDocument?.videoIds?.length);
+            if(list.length !== resDocument?.videoIds?.length){
+                return "FAILED UPDATE LIST DATA";
+            }
 
             return resDocument;
         } catch (err) {
-            console.error("===================>ERROR IN UPDATE LIST DATA: ", err);
+            console.error("[DATABASE] ERROR IN UPDATE LIST DATA: ", err);
             console.log("=>>>>> Replay ", i, "times");
 
             if(i === 2) return "FAILED UPDATE LIST DATA";
@@ -304,7 +308,7 @@ const initializeCommentList = async (parentId, listId) => {
     
     let edited_list_id = listId?.map(item => ({
         parentId: parentId,
-        videoId: item.videoId,
+        videoId: item,
         comments: [],
         amountFetched: 0,
         nextPage: "",
@@ -313,16 +317,16 @@ const initializeCommentList = async (parentId, listId) => {
     for(let i = 0; i < 3; i += 1) {
         try {
             let res = await ListComment.insertMany(edited_list_id, {ordered: false});
-            console.log("ADDED TO INITIAL COMMENT LIST: ", parentId, " SIZE: ", res?.length, "\n");
+            console.log("ADDED TO INITIAL COMMENT LIST: ", parentId, " INPUT SIZE: ", listId.length, " SIZE: ", res?.length, "\n");
 
             return "INITED LIST COMMENT";
 
         } catch (err) {
-            console.error("===================>ERROR IN INITIAL COMMENT: ", parentId, " SIZE: ", listId?.length);
+            console.error("[DATABASE] ERROR IN INITIAL COMMENT: ", parentId, " SIZE: ", listId?.length);
             console.log("ERROR: ", err?.code);
 
             if(err?.code === 11000) {
-                console.log(`ADDED SUCCESSFUL = ${listId?.length} - ${err?.writeErrors.length} = ${listId?.length - err?.writeErrors.length}\n`);
+                console.log(`[DUPLICATE] RESULT ADD SUCCESSFUL = ${listId?.length} - ${err?.writeErrors.length} = ${listId?.length - err?.writeErrors.length}\n`);
                 return "INITED LIST COMMENT WITH DUPLICATE";
             }
             
@@ -371,12 +375,12 @@ const handleCrawlVideoID = async (index_api) => {
         else if(result_nextPage.index > 0 && result_nextPage.nextPage !== "") {
             keyword = result_nextPage.keywords[0];
             regionCode = result_nextPage.regionCode;
-            console.log("not null");
+            console.log("[GET NEXTPAGE CRAWL VIDEOID] not null");
 
         } else if(result_nextPage.index < 0) {
             keyword = query[0];
             regionCode = listRegionCode[0];
-            console.log("empty");
+            console.log("[GET NEXTPAGE CRAWL VIDEOID] empty");
         }
 
         if(!keyword || !regionCode) return "FULLED CRAWL ALL KEYWORD";
@@ -402,8 +406,10 @@ const handleCrawlVideoID = async (index_api) => {
                 let arr = response_query.data.items.map(item => item.id.videoId);
 
                 let result_update_list_id = await handleUpdateListData(arr, [keyword], totalResults, nextPageToken, indexDocument, regionCode);
-                
+
                 if(result_update_list_id !== "FAILED UPDATE LIST DATA") {
+                    console.log(`SAVE: ${response_query.data.items[0].snippet.publishedAt} ==> ${response_query.data.items[response_query.data.items.length -1].snippet.publishedAt}`)
+
                     if(result_update_list_id !== null) {
                         await new Promise((resolve, _) => setTimeout(resolve, 500));
                         let result_init = await initializeCommentList(result_update_list_id?._id.toString(), result_update_list_id?.videoIds);
