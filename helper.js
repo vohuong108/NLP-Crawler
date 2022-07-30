@@ -54,21 +54,43 @@ const queryVideoId = async(base_url, part, query, relevanceLanguage, regionCode,
     }
 };
 
-const queryComment = async (base_url, part, maxResults, order, textFormat, videoID, key, pageToken) => {
-    let url = `${base_url}?part=${part.join("%2C")}&maxResults=${maxResults}&order=${order}&textFormat=${textFormat}&videoId=${videoID}${pageToken ? '&pageToken=' + pageToken : ''}&key=${key}`;
+const queryCommentThreads = async (
+    base_url, part, maxResults, order, 
+    textFormat, videoId, API_KEY, pageToken
+    ) => {
+        let url = "";
+        if(pageToken) {
+            url = base_url 
+                + "?part=" + part.join("%2C")
+                + "&pageToken=" + pageToken
+                + "&order=" + order
+                + "&maxResults=" + maxResults
+                + "&textFormat=" + textFormat
+                + "&videoId=" + videoId
+                + "&pageToken=" + pageToken
+                + "&key=" + API_KEY;
+
+        } else {
+            url = base_url 
+                + "?part=" + part.join("%2C")
+                + "&order=" + order
+                + "&maxResults=" + maxResults
+                + "&textFormat=" + textFormat
+                + "&videoId=" + videoId
+                + "&key=" + API_KEY;
+        }
     
     for(let i=0; i<3; i += 1) {
         try {
             let res = await axios.get(url);
-            console.log("SEND QUERY COMMENT SUCCESS");
+            console.log("SEND QUERY COMMENT THREADS SUCCESS");
             return res?.data;
     
         } catch (err) {
-            console.error("################################ERROR IN SENT QUERY: ", err?.message, " AND ", err?.response?.status, "AND: ", err?.response?.statusText);
+            console.error("^^^^^^^^^^^[QUERY]^^^^^^^^^^^ ERROR IN SENT QUERY: ", err?.message, " AND ", err?.response?.status, "AND: ", err?.response?.statusText);
             
             if(err?.response?.data) {
-                console.error("ERROR DATA: ", err.response.data);
-                console.error("LIST ERROR: ", err.response.data?.error?.errors);
+                console.error("ERROR DATA: ", err.response.data?.error?.message);
 
                 if(err.response.data?.error?.errors[0]?.reason === "commentsDisabled") return "COMMENT DISABLED";
                 else if(err.response.data?.error?.errors[0]?.reason === "videoNotFound") return "VIDEO NOT FOUND";
@@ -96,7 +118,7 @@ const queryDetail = async (base_url, part, list_ids, maxResults, API_KEY) => {
             return res?.data;
     
         } catch (err) {
-            console.error("################################ERROR IN SENT QUERY: ", err?.message);
+            console.error("^^^^^^^^^^^[QUERY]^^^^^^^^^^^ ERROR IN SENT QUERY: ", err?.message);
             console.log("ERROR CODE: ", err?.response?.status, " ERROR STATUS: ", err?.response?.statusText);
             console.error("LIST ERROR: ", err?.response?.data?.error?.errors);
 
@@ -120,7 +142,7 @@ const queryUpdateComment = async (base_url, id, key) => {
             return res?.data;
     
         } catch (err) {
-            console.error("################################ERROR IN SENT QUERY: ", err?.message, " AND ", err?.response?.status, "AND: ", err?.response?.statusText);
+            console.error("^^^^^^^^^^^[QUERY]^^^^^^^^^^^ ERROR IN SENT QUERY: ", err?.message, " AND ", err?.response?.status, "AND: ", err?.response?.statusText);
             
             if(err?.response?.data) {
                 console.error("ERROR DATA: ", err.response.data);
@@ -136,5 +158,5 @@ const queryUpdateComment = async (base_url, id, key) => {
     }
 }
 
-module.exports = {queryVideoId, queryComment, queryDetail, queryUpdateComment};
+module.exports = {queryVideoId, queryCommentThreads, queryDetail, queryUpdateComment};
 
