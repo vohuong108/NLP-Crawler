@@ -38,7 +38,7 @@ const getNextPageCrawlVideoId = async () => {
 }
 
 //Save the list videoId found to mongooDB cloud
-const handleUpdateListData = async (list, keywords, totalOfVideo, nextPage, index, regionCode) => {
+const saveListVideoId = async (list, keywords, totalOfVideo, nextPage, index, regionCode) => {
     for(let i= 0; i < 3; i += 1) {
         try {
             let resDocument = await ListId.create({
@@ -63,41 +63,6 @@ const handleUpdateListData = async (list, keywords, totalOfVideo, nextPage, inde
             console.log("=>>>>> Replay ", i, "times");
 
             if(i === 2) return "FAILED UPDATE LIST DATA";
-        }
-        await new Promise((resolve, _) => setTimeout(resolve, 1000));
-    }
-}
-
-//Initialize a record(document) corresponding to the videIds found
-//Each record have {comments: [], nextPage: ""}
-const initializeCommentList = async (parentId, listId) => {
-    
-    let edited_list_id = listId?.map(item => ({
-        parentId: parentId,
-        videoId: item,
-        comments: [],
-        amountFetched: 0,
-        nextPage: "",
-    }));
-
-    for(let i = 0; i < 3; i += 1) {
-        try {
-            let res = await ListComment.insertMany(edited_list_id, {ordered: false});
-            console.log("ADDED TO INITIAL COMMENT LIST: ", parentId, " INPUT SIZE: ", listId.length, " SIZE: ", res?.length, "\n");
-
-            return "INITED LIST COMMENT";
-
-        } catch (err) {
-            console.error("[DATABASE] ERROR IN INITIAL COMMENT: ", parentId, " SIZE: ", listId?.length);
-            console.log("ERROR: ", err?.code);
-
-            if(err?.code === 11000) {
-                console.log(`[DUPLICATE] RESULT ADD SUCCESSFUL = ${listId?.length} - ${err?.writeErrors.length} = ${listId?.length - err?.writeErrors.length}\n`);
-                return "INITED LIST COMMENT WITH DUPLICATE";
-            }
-            
-            console.log("===>>>REPLAY ", i, "times");
-            if(i === 2) return "FAILED INITIAL COMMENT LIST";
         }
         await new Promise((resolve, _) => setTimeout(resolve, 1000));
     }
@@ -175,15 +140,10 @@ const handleCrawlVideoID = async (index_api) => {
             if(response_query.data.items.length > 0) {
                 let arr = response_query.data.items.map(item => item.id.videoId);
 
-                let result_update_list_id = await handleUpdateListData(arr, [keyword], totalResults, nextPageToken, indexDocument, regionCode);
+                let result_update_list_id = await saveListVideoId(arr, [keyword], totalResults, nextPageToken, indexDocument, regionCode);
 
                 if(result_update_list_id !== "FAILED UPDATE LIST DATA") {
                     console.log(`SAVE: ${response_query.data.items[0].snippet.publishedAt} ==> ${response_query.data.items[response_query.data.items.length -1].snippet.publishedAt}`)
-
-                    if(result_update_list_id !== null) {
-                        await new Promise((resolve, _) => setTimeout(resolve, 500));
-                        let result_init = await initializeCommentList(result_update_list_id?._id.toString(), result_update_list_id?.videoIds);
-                    }
 
                     if(!nextPageToken) return "FULLED CRAWL VIDEO ID";
                     else {

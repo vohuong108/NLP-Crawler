@@ -160,7 +160,7 @@ const handleCrawlCommentThreads = async (index_api) => {
             if(responeNewCrawl.message === "FULLED CRAWL FOR THIS VIDEO" || responeNewCrawl.message === "RESOURCE NOT FOUND") {
                 currentThreadIndex = responeNewCrawl.currentThreadIndex;
                 await new Promise((resolve, _) => setTimeout(resolve, 1000));
-            } else return "FAILED QUERY";
+            } else return responeNewCrawl.message;
         }
     }
 
@@ -269,6 +269,7 @@ const saveCommentThreadData = async (data) => {
         } catch (err) {
             console.error("[DATABASE] ERROR IN SAVE COMMENT THREADS INPUT SIZE: ", data.length);
             console.log("ERROR: ", err?.code);
+            console.log("ERROR DETAILS: ", err?.writeErrors.map(i => i?.err?.errmsg))
 
             if(err?.code === 11000) {
                 console.log(`[DUPLICATE] RESULT ADD SUCCESSFUL = ${data.length} - ${err?.writeErrors.length} = ${data.length - err?.writeErrors.length}\n`);

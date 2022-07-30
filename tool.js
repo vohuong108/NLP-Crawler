@@ -1,4 +1,3 @@
-const retryCrawl = require("./retry");
 const { handleCrawlVideoID } = require("./crawl");
 const { handleCrawlVideoDetail } = require("./crawlDetailVideo");
 const { handleCrawlCommentThreads } = require("./comment/crawlComment");
@@ -11,14 +10,6 @@ const tool = async () => {
     let isConnected = await connectDB();
 
     if(isConnected === "CONNECTED TO DATABASE") {
-        // console.log("=====>>>>RUN RETRY CRARWL");
-        // let res1 = await retryCrawl();
-        // console.log("=====>>>>RES RETRY CRARWL: ", res1);
-
-        // console.log("=====>>>>RUN READY CRARWL");
-        // let res2 = await handleNewCrawl();
-        // console.log("=====>>>>RES READY CRARWL: ", res2);
-
         let index_api = 79;
 
         while(true) {
