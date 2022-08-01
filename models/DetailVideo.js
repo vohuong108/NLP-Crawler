@@ -21,6 +21,7 @@
 const mongoose = require('mongoose');
 
 const detailVideoSchema = new mongoose.Schema({
+    index: {type: Number, unique: true},
     parentId: String,
     videoId: {type: String, unique: true, dropDups: true },
     parentIndex: Number,

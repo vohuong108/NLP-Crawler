@@ -3,7 +3,6 @@
  * @returns the list of video id
  */
 
-const ListComment = require('./models/ListComment');
 const ListId = require('./models/ListId');
 const { queryVideoId } = require('./helper');
 const LIST_API = require("./api");

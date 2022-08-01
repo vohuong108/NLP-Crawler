@@ -2,26 +2,61 @@
  * crawl top comment of video.
  * @returns The top comment of video
  */
- const { queryCommentThreads } = require('../helper');
- const LIST_API = require("../api");
- const ListTopComment = require("../models/ListTopComment");
- const ListId = require("../models/ListId");
- const mongoose = require('mongoose');
-
- const base_cmt_url = "https://youtube.googleapis.com/youtube/v3/commentThreads";
+const { queryCommentThreads } = require('../helper');
+const LIST_API = require("../api");
+const TopComment = require('../models/TopComment');
+const DetailVideo = require('../models/DetailVideo');
 
 
- const handleCrawlCommentById = async (
-        threadIndex, batchId, batchIndex, batchSize, videoId, videoIndex, nextPage, API_KEY
-    ) => {
+const base_cmt_url = "https://youtube.googleapis.com/youtube/v3/commentThreads";
+
+const handleCrawlCommentThreads = async (index_api) => {
+    if(index_api >= LIST_API.length) {
+        return "EXCEED LIST API";
+    }
+
+    let videoIndex = null;
+    let API_KEY = LIST_API[index_api];
+    let currentThreadIndex = null;
+
+    while (true) {
+        let nextBatch = await FindNextVideoFromDetail(videoIndex);
+        console.log("RESULT FIND NEXT BATCH: ", nextBatch);
+
+        if(nextBatch === "FULLED FIND NEXT VIDEO") return "CRAWL COMMENT THREADS SUCCESSFULLY";
+        if(nextBatch === "FAILED FIND NEXT VIDEO") return "FAILED FIND NEXT VIDEO";
+
+        videoIndex = nextBatch.videoIndex;
+        currentThreadIndex = nextBatch.currentThreadIndex;
+
+        console.log("\n===>>>>>> START CRAWL IN VIDEO INDEX: ", videoIndex, " ID: ", nextBatch.videoId, " NEXT PAGE: ", nextBatch.nextPage);
+        let responeNewCrawl = await handleCrawlCommentById(
+            currentThreadIndex + 1,
+            nextBatch.videoId,
+            videoIndex, 
+            nextBatch.nextPage,
+            API_KEY
+        );
+        console.log("===>>>>>>>> END CRAWL WITH: ", responeNewCrawl, "\n");
+
+        if(responeNewCrawl.message === "FULLED CRAWL FOR THIS VIDEO" || responeNewCrawl.message === "RESOURCE NOT FOUND") {
+            await new Promise((resolve, _) => setTimeout(resolve, 1000));
+        } else return responeNewCrawl.message;
+        
+    }
+
+}
+
+const handleCrawlCommentById = async (
+    nextThreadIndex, videoId, videoIndex, nextPage, API_KEY
+) => {
 
     let part = ['snippet'];
     let maxResults = 100;
     let order = 'time';
     let textFormat = 'plainText';
     let nextPageToken = nextPage;
-    let curThreadIndex = threadIndex;
-     
+    let curThreadIndex = nextThreadIndex;
 
     while(true) {
         
@@ -29,44 +64,41 @@
             base_cmt_url, part, maxResults, order, 
             textFormat, videoId, API_KEY, nextPageToken
         );
+        let currentQuery = {videoId: videoId, videoIndex: videoIndex, nextPage: nextPageToken};
+
         if(responeQuery === "FAILED QUERY") return { message: "FAILED QUERY" };
         if(responeQuery === "QUERY QUOTA EXCEED") return {message: "QUERY QUOTA EXCEED"};
         if(responeQuery === "COMMENT DISABLED" || responeQuery === "VIDEO NOT FOUND") {
             let responeSaveData = await saveCommentThreadData([{
                 index: curThreadIndex,
                 statusCode: 1,
-                parentId: batchId,
-                parentIndex: batchIndex,
-                parentSize: batchSize,
                 videoId: videoId,
                 videoIndex: videoIndex,
-                commentId: "null" + curThreadIndex,
+                commentId: `${videoId}-null-${curThreadIndex}`,
                 topLevelComment: null,
                 canReply: null,
                 totalReplyCount: null,
                 isPublic: null,
+                query: currentQuery,
                 nextPage: null,
                 serial: null,
-                size: null,
+                size: null
             }]);
 
             if (responeSaveData === "FAILED SAVE LIST COMMENT THREADS") {
                 return { message: "FAILED SAVE CODE 1 COMMENT THREADS" }
             }
-            return {message: "RESOURCE NOT FOUND", currentThreadIndex: curThreadIndex};
+            return {message: "RESOURCE NOT FOUND"};
         }
         
         
-        console.log(">>>>>Fetched Top Comments: ", responeQuery.pageInfo.totalResults);
+        console.log(">>>>> FETCHED Top Comments: ", responeQuery.pageInfo.totalResults);
 
         if(responeQuery?.items?.length > 0) {
             
             let listCommentThreads = responeQuery.items.map((item, index) => ({
                 index: curThreadIndex + index,
                 statusCode: 3,
-                parentId: batchId,
-                parentIndex: batchIndex,
-                parentSize: batchSize,
                 videoId: videoId,
                 videoIndex: videoIndex,
                 commentId: item.id,
@@ -74,6 +106,7 @@
                 canReply: item.snippet.canReply,
                 totalReplyCount: item.snippet.totalReplyCount,
                 isPublic: item.snippet.isPublic,
+                query: currentQuery,
                 nextPage: responeQuery.nextPageToken,
                 serial: index + 1,
                 size: responeQuery.pageInfo.totalResults,
@@ -85,174 +118,121 @@
                 return {message: "FAILED SAVE LIST COMMENT THREADS"}
             }
 
-            curThreadIndex += (responeQuery.items.length - 1);
             nextPageToken = responeQuery.nextPageToken;
 
-            if (!nextPageToken) return {message: "FULLED CRAWL FOR THIS VIDEO", currentThreadIndex: curThreadIndex};
+            if (!nextPageToken) return {message: "FULLED CRAWL FOR THIS VIDEO"};
+
             await new Promise((resolve, _) => setTimeout(resolve, 1500));
-        }
-        else {
+        
+        } else {
             let responeSaveData = await saveCommentThreadData([{
                 index: curThreadIndex,
                 statusCode: 2,
-                parentId: batchId,
-                parentIndex: batchIndex,
-                parentSize: batchSize,
                 videoId: videoId,
                 videoIndex: videoIndex,
-                commentId: "null" + curThreadIndex,
+                commentId: `${videoId}-null-${curThreadIndex}`,
                 topLevelComment: null,
                 canReply: null,
                 totalReplyCount: null,
                 isPublic: null,
+                query: currentQuery,
                 nextPage: null,
                 serial: null,
-                size: null,
+                size: null
             }]);
 
             if (responeSaveData === "FAILED SAVE LIST COMMENT THREADS") {
                 return {message: "FAILED SAVE CODE 2 COMMENT THREADS" };
             }
 
-            return {message: "FULLED CRAWL FOR THIS VIDEO", currentThreadIndex: curThreadIndex};
+            return {message: "FULLED CRAWL FOR THIS VIDEO"};
         }
-      
+    
     }
 }
 
-
-const handleCrawlCommentThreads = async (index_api) => {
-    if(index_api >= LIST_API.length) {
-        return "EXCEED LIST API";
-    }
-
-    let batchIndex = null;
-    let API_KEY = LIST_API[index_api];
-    let currentThreadIndex = null;
-
-    while (true) {
-        let nextBatch = await FindNextBatch(batchIndex);
-        console.log("RESULT FIND NEXT BATCH: ", {...nextBatch, videoIds: nextBatch.videoIds.length});
-
-        if(nextBatch === "FULLED BATCH VIDEO") return "CRAWL COMMENT THREADS SUCCESSFULLY";
-        if(nextBatch === "FAILED FIND NEXT BATCH") return "FAILED FIND NEXT BATCH";
-
-        batchIndex = nextBatch.batchIndex;
-        currentThreadIndex = nextBatch.commentThreadIndex;
-
-        for(let i=0; i < nextBatch.videoIds.length; i+=1) {
-
-            let videoId = nextBatch.videoIds[i];
-
-            console.log("===>>>>>>START CRAWL IN VIDEO INDEX: ", nextBatch.videoIndex + i, " ID: ", videoId, " NEXT PAGE: ", nextBatch.nextPage);
-            let responeNewCrawl = await handleCrawlCommentById(
-                currentThreadIndex + 1, 
-                nextBatch.batchId, 
-                nextBatch.batchIndex, 
-                nextBatch.batchSize, 
-                videoId,
-                nextBatch.videoIndex + i, 
-                nextBatch.nextPage,
-                API_KEY
-            );
-            console.log("===>>>>>>>>END CRAWL WITH: ", responeNewCrawl, "\n");
-
-            if(responeNewCrawl.message === "FULLED CRAWL FOR THIS VIDEO" || responeNewCrawl.message === "RESOURCE NOT FOUND") {
-                currentThreadIndex = responeNewCrawl.currentThreadIndex;
-                await new Promise((resolve, _) => setTimeout(resolve, 1000));
-            } else return responeNewCrawl.message;
-        }
-    }
-
-    
-
-    
-
-}
-
-const FindNextBatch = async (batchIndexInput) => {
-    console.log("INPUT FIND NEXT BATCH VIDEO: ", batchIndexInput);
+const FindNextVideoFromDetail = async (indexInput) => {
+    console.log("INPUT FIND NEXT VIDEO: ", indexInput);
 
     for(let i = 0; i < 3; i += 1) {
         try {
-            let batchFilter = {}
-            let batchProjection = []
-            let batchOption = {}
+            let Filter = {}
+            let currentThreadIndex = -1;
 
-            let currentIndex;
-            let nextPage = null;
-            let commentThreadIndex = -1;
+            let lastCommentThread = await TopComment.findOne(
+                {}, 
+                ["_id", "index", "videoId", "videoIndex", "query", "nextPage", "serial", "size"],
+                { sort: { index: -1 }}
+            );
 
-            let filter = {};
-            let projection = ["_id", "index", "parentId", "parentIndex", "parentSize", "videoId", "videoIndex", "nextPage", "serial", "size"];
-            let option = { sort: { index: -1 }};
+            if(lastCommentThread?._id) currentThreadIndex = lastCommentThread.index;
 
-            let lastCommentThread = await ListTopComment.findOne(filter, projection, option);
-
-            if(!batchIndexInput) {
+            
+            if(indexInput === null || indexInput === undefined) {
                 if(lastCommentThread?._id) {
-                    commentThreadIndex = lastCommentThread.index;
                     
-                    if(lastCommentThread.nextPage || (lastCommentThread.serial != lastCommentThread.size)) {
-                        console.log(`SERIAL/SIZE = ${lastCommentThread.serial}/${lastCommentThread.size}`);
+                    if(lastCommentThread.serial !== lastCommentThread.size) {
+                        console.log(
+                            "QUERY: ", lastCommentThread.query, 
+                            `SERIAL/SIZE = ${lastCommentThread.serial}/${lastCommentThread.size}`
+                        );
 
-                        currentIndex = lastCommentThread.videoIndex;
-                        batchFilter = {_id: mongoose.Types.ObjectId(lastCommentThread.parentId)}
-                        batchProjection = ["_id", "videoIds", "size", "index"]
-                        batchOption = {}
-                        nextPage = lastCommentThread.nextPage;
+                        // crawl more missing data using its query
+                        return {
+                            videoId: lastCommentThread.query.videoId,
+                            videoIndex: lastCommentThread.query.videoIndex,
+                            currentThreadIndex: lastCommentThread.index,
+                            nextPage: lastCommentThread.query.nextPage,
+                        };
                         
-                    } else if(lastCommentThread.videoIndex === (lastCommentThread.parentSize - 1)){
-                        currentIndex = 0;
-                        batchFilter = { index: { $gt: lastCommentThread.parentIndex }}
-                        batchProjection = ["_id", "videoIds", "size", "index"]
-                        batchOption = { sort: { index: 1 }}
 
-                    } else if(lastCommentThread.videoIndex < (lastCommentThread.parentSize - 1)) {
-                        currentIndex = lastCommentThread.videoIndex + 1;
-                        batchFilter = {_id: mongoose.Types.ObjectId(lastCommentThread.parentId)}
-                        batchProjection = ["_id", "videoIds", "size", "index"]
-                        batchOption = {}
+                    } else if (lastCommentThread.nextPage) {
+                        console.log("MATCH IN NEXT PAGE NOT NULL");
+                        return {
+                            videoId: lastCommentThread.videoId,
+                            videoIndex: lastCommentThread.videoIndex,
+                            currentThreadIndex: lastCommentThread.index,
+                            nextPage: lastCommentThread.nextPage
+                        };
 
+                    } else {
+                        // nextPage is empty that mean video is crawled fully comment.
+                        Filter = {index: {$gt: lastCommentThread.videoIndex}};
                     }
 
                 } else {
-                    currentIndex = 0;
-                    batchFilter = {}
-                    batchProjection = ["_id", "videoIds", "size", "index"]
-                    batchOption = { sort: { index: 1 }}
+                    // this point mean just started crawling data 
+                    Filter = {};
                 }
+
             } else {
-                commentThreadIndex = lastCommentThread?.index || -1;
-                currentIndex = 0;
-                batchFilter = { index: { $gt: batchIndexInput }}
-                batchProjection = ["_id", "videoIds", "size", "index"]
-                batchOption = { sort: { index: 1 }}
+                Filter = {index: {$gt: indexInput}};
             }
+            
+            console.log("FILTER FIND NEXT VIDEO: ", Filter);
 
-            console.log("FILTER NEXT BATCH: ", batchFilter, " VIDEO INDEX: ", currentIndex, " NEXT PAGE: ", nextPage, " THREAD INDEX: ", commentThreadIndex);
-
-            let result = await ListId.findOne(batchFilter, batchProjection, batchOption);
+            let result = await DetailVideo.findOne(
+                Filter, 
+                ["_id", "videoId", "index"], 
+                {sort: {index: 1}}
+            );
+            
 
             if(result?._id) {
                 return {
-                    commentThreadIndex: commentThreadIndex,
-                    batchId: result._id,
-                    batchIndex: result.index,
-                    batchSize: result.size,
-                    videoIndex: currentIndex,
-                    videoIds: result.videoIds.slice(currentIndex),
-                    nextPage: nextPage
+                    videoId: result.videoId,
+                    videoIndex: result.index,
+                    currentThreadIndex: currentThreadIndex,
+                    nextPage: null
                 }
 
-            } else {
-                return "FULLED BATCH VIDEO";
-            }
+            } else return "FULLED FIND NEXT VIDEO";
+            
         } catch (err) {
             console.error("^^^^^^^^^^^[DATABASE]^^^^^^^^^^^ ERROR IN FIND NEXT BATCH: ", err);
             console.log("===>> Replay ", i, "times");
             
-            if(i === 2) return "FAILED FIND NEXT BATCH";
+            if(i === 2) return "FAILED FIND NEXT VIDEO";
         }
         await new Promise((resolve, _) => setTimeout(resolve, 1000));
     }
@@ -261,7 +241,7 @@ const FindNextBatch = async (batchIndexInput) => {
 const saveCommentThreadData = async (data) => {
     for(let i = 0; i < 3; i+=1) {
         try {
-            let res = await ListTopComment.insertMany(data, {ordered: true});
+            let res = await TopComment.insertMany(data, {ordered: false});
             console.log("ADDED TO LIST COMMENT THREADS INPUT SIZE: ", data.length, " SIZE: ", res?.length, "\n");
 
             return "SAVED LIST COMMENT THREADS";
