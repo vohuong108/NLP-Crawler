@@ -119,6 +119,7 @@ const handleCrawlCommentById = async (
             }
 
             nextPageToken = responeQuery.nextPageToken;
+            curThreadIndex += responeQuery.items.length;
 
             if (!nextPageToken) return {message: "FULLED CRAWL FOR THIS VIDEO"};
 

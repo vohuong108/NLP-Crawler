@@ -1,16 +1,13 @@
 const mongoose = require('mongoose');
 
 const listTopCommentSchema = new mongoose.Schema({
-    index: Number,
-    commentId: String,
-    commentIndex: Number,
-    replySize: Number,
-
-    commentId: {type: String, unique: true, dropDups: true },
-    topLevelComment: Object,
-    canReply: Boolean,
-    totalReplyCount: Number,
-    isPublic: Boolean,
+    index: {type: Number, index: true},
+    statusCode: Number,
+    commentId: {type: String, require: true},
+    commentIndex: {type: Number, require: true},
+    replyId: {type: String, unique: true, dropDups: true },
+    
+    query: Object,
     nextPage: String,
     serial: Number,
     size: Number,
