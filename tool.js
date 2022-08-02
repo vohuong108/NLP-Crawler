@@ -1,7 +1,8 @@
 const { handleCrawlVideoID } = require("./crawl");
 const { handleCrawlVideoDetail } = require("./crawlDetailVideo");
 const { handleCrawlCommentThreads } = require("./comment/crawlComment");
-const { handleUpdateIndexTopComment } = require("./fix/fixTopComment");
+const { handleCrawlRely } = require("./comment/crawlReply");
+
 
 const connectDB = require("./db");
 const { default: axios } = require("axios");
@@ -11,10 +12,8 @@ const tool = async () => {
     let isConnected = await connectDB();
 
     if(isConnected === "CONNECTED TO DATABASE") {
-        let index_api = 82;
+        let index_api = 85;
         let order = null;
-
-        await handleUpdateIndexTopComment();
 
         while(true) {
             // console.log("=====>>>>RUN CRARWL ID");
@@ -47,8 +46,15 @@ const tool = async () => {
             //     index_api += 1;
 
             // } else break;
+
+            console.log("=====>>>>RUN CRAWL REPLY");
+            console.log("INDEX API: ", index_api);
+            let res3 = await handleCrawlRely(index_api);
+            console.log("\n=====>>>>RES CRAWL REPLY: ", res3);
             
-            
+            if(res3 === "QUERY QUOTA EXCEED") {
+                index_api += 1;
+            } else break;            
     
         }
         

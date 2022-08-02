@@ -62,7 +62,6 @@ const queryCommentThreads = async (
         if(pageToken) {
             url = base_url 
                 + "?part=" + part.join("%2C")
-                + "&pageToken=" + pageToken
                 + "&order=" + order
                 + "&maxResults=" + maxResults
                 + "&textFormat=" + textFormat
@@ -133,8 +132,51 @@ const queryDetail = async (base_url, part, list_ids, maxResults, API_KEY) => {
     }
 }
 
-const queryReply = async () => {
+const queryReply = async (
+    base_url, part, maxResults, textFormat, commentId, API_KEY, pageToken
+    ) => {
+        let url = "";
+        if(pageToken) {
+            url = base_url 
+                + "?part=" + part.join("%2C")
+                + "&maxResults=" + maxResults
+                + "&textFormat=" + textFormat
+                + "&parentId=" + commentId
+                + "&pageToken=" + pageToken
+                + "&key=" + API_KEY;
 
+        } else {
+            url = base_url 
+                + "?part=" + part.join("%2C")
+                + "&maxResults=" + maxResults
+                + "&textFormat=" + textFormat
+                + "&parentId=" + commentId
+                + "&key=" + API_KEY;
+        }
+    
+    for(let i=0; i<3; i += 1) {
+        try {
+            let res = await axios.get(url);
+            console.log("SEND QUERY REPLY SUCCESS");
+            return res?.data;
+    
+        } catch (err) {
+            console.error("^^^^^^^^^^^[QUERY]^^^^^^^^^^^ ERROR IN SENT QUERY: ", err?.message, " AND ", err?.response?.status, "AND: ", err?.response?.statusText);
+            
+            if(err?.response?.data) {
+                console.error("ERROR DATA: ", err.response.data?.error?.message);
+
+                if(err.response.data?.error?.errors[0]?.reason === "commentNotFound") return "COMMENT NOT FOUND";
+                else if(err.response.data?.error?.errors[0]?.reason === "quotaExceeded") return "QUERY QUOTA EXCEED";
+            }
+            
+            if(err?.response?.status === 403 && err?.response?.statusText === "quotaExceeded") return "QUERY QUOTA EXCEED";
+            
+            console.log("=>>>>> Replay ", i, "times");
+            if(i === 2) return "FAILED QUERY";
+        }
+        await new Promise((resolve, _) => setTimeout(resolve, 1000));
+    }
 }
 
 module.exports = {queryVideoId, queryCommentThreads, queryDetail, queryReply};

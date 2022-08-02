@@ -6,11 +6,11 @@ const listTopCommentSchema = new mongoose.Schema({
     commentId: {type: String, require: true},
     commentIndex: {type: Number, require: true},
     replyId: {type: String, unique: true, dropDups: true },
-    
+    snippet: Object,
     query: Object,
     nextPage: String,
     serial: Number,
     size: Number,
 }, { timestamps: { createdAt: 'created_at', updatedAt: 'updated_at' }});
 
-module.exports = mongoose.model('listTopComments', listTopCommentSchema);
+module.exports = mongoose.model('listReplys', listTopCommentSchema);
