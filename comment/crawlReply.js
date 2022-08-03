@@ -102,7 +102,7 @@ const handleCrawlRelyByCommentId = async (
                 query: currentQuery,
                 nextPage: responeQuery.nextPageToken,
                 serial: index + 1,
-                size: responeQuery.pageInfo.totalResults,
+                size: responeQuery.items.length,
             }));
 
             let responeSaveData = await saveReplyData(listReply);
